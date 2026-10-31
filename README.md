@@ -1,176 +1,79 @@
-# mod-QOL-followers
+# mod-twow-QOL-followers
 
-**mod-QOL-followers** is a standalone AzerothCore WotLK module that gives real players summonable utility companions for services that are normally tied to cities and NPC hubs.
+![mod-twow-QOL-followers Banner](preview.jpg)
 
-The module currently provides a **Banker**, an **Auctioneer**, and **Medivh** as a combined trainer, profession helper, talent-service NPC, dual-spec trainer, and teleporter. Followers physically accompany their owner, use configurable movement hysteresis, and can safely catch up when the player gets too far away.
+mod-twow-QOL-followers is a standalone Turtle WoW custom vMaNGOS module (targeting client 1.18.1 build 7272) that provides players with summonable quality-of-life companion followers for essential town and field services across Azeroth.
 
-No custom client patch or SQL import is required.
+The module introduces three distinct utility companions: a faction-tailored Banker, an Auctioneer, and the Kirin Tor Familiar offering full class training, profession training, talent resets, multi-spec management, and worldwide fast-travel teleportation.
 
-## Followers
+## Companions and Services
 
-| Follower | Main services |
-| --- | --- |
-| **Banker** | Opens the player's bank and can be dismissed from gossip. Uses faction-specific Pack Kodo / Pack Mule appearances by default. |
-| **Auctioneer** | Opens the Auction House and inherits the owner's faction so the correct auction house is used. |
-| **Medivh** | Class training, profession trainers, talent reset services, pet talent reset for hunters, dual specialization, and teleportation. |
+| Follower | Creature ID | Native Summon Spell | Appearance | Main Services |
+| :--- | :---: | :---: | :---: | :--- |
+| Banker (Alliance) | 70100 | 46459 (Forworn Mule) | Pack Mule (Display 14546) | Opens personal bank storage vault anywhere in the world. |
+| Banker (Horde) | 70103 | 46483 (Caravan Kodo) | Pack Kodo (Display 7933) | Opens personal bank storage vault anywhere in the world. |
+| Auctioneer | 70101 | 46460 (Mechanical Auctioneer) | Auctioneer Beardo (Display 7993) | Opens global Auction House browsing, bidding, and listing. |
+| Kirin Tor Familiar | 70102 | 46465 (Kirin Tor Familiar) | Kirin Tor Familiar (Display 14432) | Class training, profession training, talent reset, pet training reset, multi-spec, and teleportation. |
 
-### Medivh teleportation
+### Kirin Tor Familiar Teleportation Network
+The Kirin Tor Familiar provides fast-travel teleportation to verified open-world entrance coordinates:
+- Alliance Capitals: Stormwind City, Ironforge, Darnassus.
+- Horde Capitals: Orgrimmar, Undercity, Thunder Bluff.
+- Neutral Hubs: Booty Bay, Gadgetzan, Ratchet, Everlook.
+- Classic Dungeons: Ragefire Chasm, The Deadmines, Wailing Caverns, Shadowfang Keep, Blackfathom Deeps, The Stockade, Gnomeregan, Razorfen Kraul, Scarlet Monastery, Razorfen Downs, Uldaman, Zul'Farrak, Maraudon, Sunken Temple, Blackrock Depths, Lower Blackrock Spire, Dire Maul, Scholomance, Stratholme.
+- Classic Raids: Molten Core, Onyxia's Lair, Blackwing Lair, Zul'Gurub, Ruins of Ahn'Qiraj, Temple of Ahn'Qiraj, Naxxramas.
 
-Medivh can teleport players to:
+## Movement and Behavior
 
-- Dalaran and Shattrath
-- Alliance and Horde capitals
-- Classic, TBC, and WotLK dungeon entrances
-- Classic, TBC, and WotLK raid entrances
-- Extra world destinations such as Karazhan, Caverns of Time, Gadgetzan, and Booty Bay
+- Native Engine Follow: Companions follow their owner using vMaNGOS MotionMaster MoveFollow at a comfortable 3.0 yard offset without hysteresis stutter.
+- Interaction Distraction: Companions automatically pause movement while their owner is interacting with gossip, bank, auction, or trainer windows.
+- Catch-Up Recovery: If the player mounts or teleports, the companion instantly catches up when distance exceeds 30 yards.
+- Single-Entity Guarantee: Core vanity mini-pet summons triggered by Effect 97 (SPELL_EFFECT_SUMMON_CRITTER) are intercepted and suppressed synchronously via PetScript, ensuring only the interactive utility follower exists.
 
-Teleport use, cost, minimum level, Dalaran level requirement, dungeon/raid menus, and extra destinations are configurable.
+## Summoning Methods
 
-## Summoning
+### 1. Native Spellbook Spells
+Spells are automatically learned upon character creation (configurable minimum level, default: Level 1):
+- Banker (Alliance): Spell 46459 (Forworn Mule)
+- Banker (Horde): Spell 46483 (Caravan Kodo)
+- Auctioneer: Spell 46460 (Mechanical Auctioneer)
+- Kirin Tor Familiar: Spell 46465 (Kirin Tor Familiar)
 
-By default, eligible real players learn three native WotLK spells at level 10:
+Casting a spell summons the corresponding companion. Casting the spell again dismisses the companion. Spells can be dragged directly onto action bars.
 
-| Follower | Spell |
-| --- | --- |
-| Banker | `67368` — Bank Errand |
-| Auctioneer | `54614` — Steam-Powered Auctioneer |
-| Medivh | `62978` — Summon Guardian |
-
-Casting a follower spell toggles that follower:
-
-- not active → summon
-- already active → dismiss
-
-The module can prevent automatically learned follower spells from being placed on the action bar. Players can still drag them from the spellbook manually.
-
-## Chat commands
-
-Player commands are also available:
-
-```text
-.utility banker
-.utility auctioneer
-.utility medivh
-.utility dismiss
-.utility
-```
-
-The first three commands toggle their matching follower, `.utility dismiss` removes all active utility followers, and `.utility` displays command help.
-
-## Movement behavior
-
-The follower AI is designed to avoid constant micro-adjustments around the player.
-
-Default movement settings:
-
-| Setting | Default | Purpose |
-| --- | ---: | --- |
-| `UtilityFollowers.FollowDistance` | `3.5` | Preferred resting distance from the owner |
-| `UtilityFollowers.StartFollowingDistance` | `7.0` | Distance that starts follow movement |
-| `UtilityFollowers.CatchUpDistance` | `30.0` | Distance that triggers safe catch-up/teleport behavior |
-| `UtilityFollowers.FollowUpdateInterval` | `300` ms | Movement update cadence |
-| `UtilityFollowers.TeleportWhenStuck` | `1` | Allows safe catch-up when stuck or too far away |
-
-The default active-follower limit is one:
-
-```ini
-UtilityFollowers.MaxActive = 1
-UtilityFollowers.MaxActivePolicy = "ReplaceOldest"
-```
-
-Both the capacity and replacement policy are configurable.
-
-## Environment controls
-
-Followers can be enabled or disabled independently for different content:
-
-```ini
-UtilityFollowers.AllowInWorld = 1
-UtilityFollowers.AllowInDungeons = 1
-UtilityFollowers.AllowInRaids = 1
-UtilityFollowers.AllowInBattlegrounds = 0
-UtilityFollowers.AllowInArenas = 0
-```
-
-Battlegrounds and arenas are disabled by default.
+### 2. Player Chat Commands
+Players can also summon and dismiss followers via in-game chat commands:
+- .utility banker (or .utility bank) - Toggle personal banker companion.
+- .utility auctioneer (or .utility ah) - Toggle personal auctioneer companion.
+- .utility helper (or .utility familiar) - Toggle Kirin Tor Familiar companion.
+- .utility dismiss [all|banker|auctioneer|helper|familiar] - Dismiss active followers.
+- .utility reload - Reload module configuration (Game Master security level required).
 
 ## Installation
 
-Clone the module into your AzerothCore `modules/` directory:
+1. Place the mod-twow-QOL-followers directory into your Turtle WoW source modules folder:
+   tortoise-wow/src/modules/mod-twow-QOL-followers
 
-```bash
-cd ~/azerothcore-wotlk/modules
-git clone https://github.com/Ildourol/mod-QOL-followers.git
-```
+2. Re-run CMake to register the module:
+   cmake -B build -S .
 
-Then rebuild/install AzerothCore using your normal build workflow. For the mod-playerbots AzerothCore fork, for example:
+3. Build the core server binary.
 
-```bash
-cd ~/azerothcore-wotlk
-./acore.sh compiler all
-```
+4. Apply the world database migration located at:
+   data/sql/world/20261030000000_world_qol_followers.sql
 
-After installation, the distributed configuration is installed with the module configs. Create the live config if your setup does not already do this automatically:
-
-```bash
-cd ~/azerothcore-wotlk/env/dist/etc/modules
-cp mod_qol_followers.conf.dist mod_qol_followers.conf
-```
-
-Restart `worldserver` after rebuilding or changing module configuration.
+5. Copy the configuration file:
+   cp conf/mod_qol_followers.conf.dist conf/mod_qol_followers.conf
 
 ## Configuration
 
-The full configuration template is:
-
-```text
-conf/mod_qol_followers.conf.dist
-```
-
-Notable configuration groups include:
-
-- master enable/disable
-- per-follower enable switches
-- movement distances and update interval
-- maximum active follower count and replacement policy
-- world / dungeon / raid / PvP restrictions
-- follower creature entries, display IDs, and scale
-- summon spell IDs and auto-learning
-- trainer costs and level restrictions
-- profession-training mode
-- teleport cost, combat restriction, level requirements, and destination menus
-
-## Compatibility
-
-The module metadata declares AzerothCore `^3.0.0` compatibility for both the standard `master` branch and the mod-playerbots `Playerbot` branch.
-
-This module is self-contained and does not require database schema changes or custom client files.
-
-## Project layout
-
-```text
-mod-QOL-followers/
-├── conf/
-│   └── mod_qol_followers.conf.dist
-├── src/
-│   ├── UtilityFollowerAI.cpp
-│   ├── UtilityFollowerAI.h
-│   ├── UtilityFollowerCommon.h
-│   ├── UtilityFollowerConfig.cpp
-│   ├── UtilityFollowerConfig.h
-│   ├── UtilityFollowerMgr.cpp
-│   ├── UtilityFollowerMgr.h
-│   ├── UtilityFollowerScripts.cpp
-│   └── mod_QOL_followers_loader.cpp
-├── acore-module.json
-├── CMakeLists.txt
-└── include.sh
-```
+The module is fully configurable via mod_qol_followers.conf:
+- Master enable switches for each follower type.
+- Custom display IDs, creature template IDs, and model scales.
+- Configurable following distance, update intervals, and catch-up thresholds.
+- Teleportation destination toggles, minimum level restrictions, and gold costs.
+- Free talent reset option and profession training modes.
 
 ## License
 
-The module source files currently carry **GNU AGPL v3** license headers.
-
----
-
-Built for AzerothCore WotLK 3.3.5a.
+This module is released under the GNU General Public License v2 (or at your option any later version).

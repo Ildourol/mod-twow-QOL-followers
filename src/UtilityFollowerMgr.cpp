@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026+ AzerothCore Project
- * Released under GNU AGPL v3 license.
+ * Copyright (C) 2026+ Turtle WoW Custom vMaNGOS Project
+ * Ported for Turtle WoW 1.18.1 (client build 7272)
  */
 
 #include "UtilityFollowerMgr.h"
-#include "Chat.h"
-#include "Creature.h"
-#include "GameTime.h"
+#include "Chat/Chat.h"
+#include "Objects/Creature.h"
+#include "Objects/Player.h"
+#include "Objects/TemporarySummon.h"
+#include "Maps/Map.h"
+#include "Movement/MotionMaster.h"
 #include "Log.h"
-#include "Map.h"
-#include "MotionMaster.h"
-#include "Player.h"
-#include "SpellInfo.h"
-#include "SpellMgr.h"
-#include "TemporarySummon.h"
+#include "Timer.h"
+#include "WorldSession.h"
 #include "UtilityFollowerAI.h"
 #include "UtilityFollowerConfig.h"
-#include "WorldSession.h"
+
+#ifndef PET_FOLLOW_ANGLE
+#define PET_FOLLOW_ANGLE (M_PI_F / 2.0f)
+#endif
 
 UtilityFollowerMgr* UtilityFollowerMgr::instance()
 {
@@ -37,7 +39,7 @@ ObjectGuid UtilityFollowerMgr::GetFollowerOwner(ObjectGuid const& creatureGuid) 
     if (itr != _followerToOwner.end())
         return itr->second.first;
 
-    return ObjectGuid::Empty;
+    return ObjectGuid();
 }
 
 FollowerType UtilityFollowerMgr::GetFollowerType(ObjectGuid const& creatureGuid) const
@@ -53,7 +55,7 @@ FollowerType UtilityFollowerMgr::GetFollowerType(ObjectGuid const& creatureGuid)
 bool UtilityFollowerMgr::IsFollowerActive(Player const* player, FollowerType type) const
 {
     std::lock_guard<std::mutex> lock(_lock);
-    auto itr = _playerFollowers.find(player->GetGUID());
+    auto itr = _playerFollowers.find(player->GetObjectGuid());
     if (itr == _playerFollowers.end())
         return false;
 
@@ -69,7 +71,7 @@ Creature* UtilityFollowerMgr::GetFollower(Player const* player, FollowerType typ
     ObjectGuid creatureGuid;
     {
         std::lock_guard<std::mutex> lock(_lock);
-        auto itr = _playerFollowers.find(player->GetGUID());
+        auto itr = _playerFollowers.find(player->GetObjectGuid());
         if (itr == _playerFollowers.end())
             return nullptr;
 
@@ -92,7 +94,7 @@ Creature* UtilityFollowerMgr::GetFollower(Player const* player, FollowerType typ
 uint32 UtilityFollowerMgr::GetActiveFollowerCount(Player const* player) const
 {
     std::lock_guard<std::mutex> lock(_lock);
-    auto itr = _playerFollowers.find(player->GetGUID());
+    auto itr = _playerFollowers.find(player->GetObjectGuid());
     if (itr == _playerFollowers.end())
         return 0;
 
@@ -104,22 +106,16 @@ bool UtilityFollowerMgr::IsMapAllowed(Map const* map) const
     if (!map)
         return false;
 
-    if (map->IsBattleArena())
-        return sUtilityFollowerConfig->AllowInArenas;
-
-    if (map->IsBattleground())
+    if (map->IsBattleGround())
         return sUtilityFollowerConfig->AllowInBattlegrounds;
 
     if (map->IsRaid())
         return sUtilityFollowerConfig->AllowInRaids;
 
-    if (map->IsNonRaidDungeon())
+    if (map->IsDungeon())
         return sUtilityFollowerConfig->AllowInDungeons;
 
-    if (map->IsWorldMap())
-        return sUtilityFollowerConfig->AllowInWorld;
-
-    return true;
+    return sUtilityFollowerConfig->AllowInWorld;
 }
 
 bool UtilityFollowerMgr::CanSummon(Player const* player, FollowerType type, std::string& reason) const
@@ -155,7 +151,7 @@ bool UtilityFollowerMgr::CanSummon(Player const* player, FollowerType type, std:
         case FollowerType::Trainer:
             if (!sUtilityFollowerConfig->TrainerEnable)
             {
-                reason = "Trainer Book follower is currently disabled.";
+                reason = "Trainer & Teleporter (Kirin Tor Familiar) follower is currently disabled.";
                 return false;
             }
             break;
@@ -197,12 +193,11 @@ bool UtilityFollowerMgr::SummonFollower(Player* player, FollowerType type)
     {
         if (sUtilityFollowerConfig->ActivePolicy == MaxActivePolicy::ReplaceOldest)
         {
-            // Find oldest follower and despawn
             FollowerType oldestType = FollowerType::Banker;
             uint32 oldestTime = 0xFFFFFFFF;
             {
                 std::lock_guard<std::mutex> lock(_lock);
-                auto const& list = _playerFollowers[player->GetGUID()];
+                auto const& list = _playerFollowers[player->GetObjectGuid()];
                 for (auto const& rec : list)
                 {
                     if (rec.spawnTime < oldestTime)
@@ -231,7 +226,7 @@ bool UtilityFollowerMgr::SummonFollower(Player* player, FollowerType type)
     {
         case FollowerType::Banker:
         {
-            bool isAlliance = (player->GetTeamId() == TEAM_ALLIANCE);
+            bool isAlliance = (player->GetTeam() == ALLIANCE);
             creatureEntry = isAlliance ? sUtilityFollowerConfig->BankerCreatureEntryAlliance : sUtilityFollowerConfig->BankerCreatureEntryHorde;
             displayId = isAlliance ? sUtilityFollowerConfig->BankerAllianceDisplayId : sUtilityFollowerConfig->BankerHordeDisplayId;
             scale = sUtilityFollowerConfig->BankerScale;
@@ -251,7 +246,8 @@ bool UtilityFollowerMgr::SummonFollower(Player* player, FollowerType type)
             creatureEntry = sUtilityFollowerConfig->TrainerCreatureEntry;
             displayId = sUtilityFollowerConfig->TrainerDisplayId;
             scale = sUtilityFollowerConfig->TrainerScale;
-            npcFlags |= UNIT_NPC_FLAG_TRAINER;
+            // Notice: Utility Helper deliberately uses ONLY UNIT_NPC_FLAG_GOSSIP (npcFlags is already initialized to 1)
+            // DO NOT set UNIT_NPC_FLAG_TRAINER! The helper handles training via short-lived proxy summons.
             break;
         }
         default:
@@ -259,41 +255,46 @@ bool UtilityFollowerMgr::SummonFollower(Player* player, FollowerType type)
     }
 
     // Summon temporary runtime creature
-    Position const pos = player->GetPosition();
-    TempSummon* summon = player->SummonCreature(creatureEntry, pos, TEMPSUMMON_MANUAL_DESPAWN);
+    Creature* summon = player->SummonCreature(creatureEntry, player->GetPositionX(), player->GetPositionY(),
+                                              player->GetPositionZ(), player->GetOrientation(),
+                                              TEMPSUMMON_MANUAL_DESPAWN);
     if (!summon)
     {
-        LOG_WARN("module.qol_followers", "Failed to summon utility follower template entry {} for player {}", creatureEntry, player->GetName());
+        sLog.outError("mod-QOL-followers: Failed to summon utility follower template entry %u for player %s",
+                      creatureEntry, player->GetName());
         return false;
     }
 
     // Configure follower attributes and appearance
-    summon->SetFaction(player->GetFaction());
+    summon->SetFactionTemplateId(player->GetFactionTemplateId());
     summon->SetDisplayId(displayId);
     summon->SetNativeDisplayId(displayId);
     summon->SetFloatValue(OBJECT_FIELD_SCALE_X, scale);
 
-    // Make strictly non-combat utility companion
-    summon->SetUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_PACIFIED));
-    summon->ReplaceAllNpcFlags(NPCFlags(npcFlags));
+    // Make strictly non-combat utility companion with guaranteed health and flags
+    summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING | UNIT_FLAG_PACIFIED);
+    summon->SetUInt32Value(UNIT_NPC_FLAGS, npcFlags);
+    summon->SetMaxHealth(100);
+    summon->SetHealth(100);
 
     // Attach custom follower AI
-    summon->SetAI(new UtilityFollowerAI(summon, player->GetGUID(), type, displayId, scale));
+    summon->SetAI(new UtilityFollowerAI(summon, player->GetObjectGuid(), type, displayId, scale));
 
     // Register active follower
     {
         std::lock_guard<std::mutex> lock(_lock);
         FollowerRecord record;
         record.type = type;
-        record.creatureGuid = summon->GetGUID();
-        record.spawnTime = static_cast<uint32>(GameTime::GetGameTimeMS().count());
+        record.creatureGuid = summon->GetObjectGuid();
+        record.spawnTime = WorldTimer::getMSTime();
 
-        _playerFollowers[player->GetGUID()].push_back(record);
-        _followerToOwner[summon->GetGUID()] = std::make_pair(player->GetGUID(), type);
+        _playerFollowers[player->GetObjectGuid()].push_back(record);
+        _followerToOwner[summon->GetObjectGuid()] = std::make_pair(player->GetObjectGuid(), type);
     }
 
-    // Initialize orientation towards owner
+    // Initialize orientation towards owner and start following
     summon->SetFacingToObject(player);
+    summon->GetMotionMaster()->MoveFollow(player, sUtilityFollowerConfig->FollowDistance, PET_FOLLOW_ANGLE);
 
     return true;
 }
@@ -303,7 +304,7 @@ void UtilityFollowerMgr::DespawnFollower(Player* player, FollowerType type)
     ObjectGuid creatureGuid;
     {
         std::lock_guard<std::mutex> lock(_lock);
-        auto playerItr = _playerFollowers.find(player->GetGUID());
+        auto playerItr = _playerFollowers.find(player->GetObjectGuid());
         if (playerItr == _playerFollowers.end())
             return;
 
@@ -337,7 +338,7 @@ void UtilityFollowerMgr::DespawnAllFollowers(Player* player)
     std::vector<ObjectGuid> toDespawn;
     {
         std::lock_guard<std::mutex> lock(_lock);
-        auto playerItr = _playerFollowers.find(player->GetGUID());
+        auto playerItr = _playerFollowers.find(player->GetObjectGuid());
         if (playerItr == _playerFollowers.end())
             return;
 
@@ -370,29 +371,7 @@ void UtilityFollowerMgr::TeachFollowerSpell(Player* player, uint32 spellId)
     if (!player || !spellId || !IsRealPlayer(player) || player->HasSpell(spellId))
         return;
 
-    if (sUtilityFollowerConfig->PreventActionBarAutoAdd)
-        MarkAutoLearningSpell(player->GetGUID(), spellId);
-
-    player->learnSpell(spellId, false);
-
-    if (sUtilityFollowerConfig->PreventActionBarAutoAdd)
-    {
-        // Immediate safeguard: clear any action button automatically populated by client/server
-        bool changed = false;
-        for (uint8 b = 0; b < MAX_ACTION_BUTTONS; ++b)
-        {
-            if (ActionButton const* ab = player->GetActionButton(b))
-            {
-                if (ab->GetAction() == spellId && ab->GetType() == ACTION_BUTTON_SPELL)
-                {
-                    player->removeActionButton(b);
-                    changed = true;
-                }
-            }
-        }
-        if (changed)
-            player->SendActionButtons(1);
-    }
+    player->LearnSpell(spellId, false);
 }
 
 void UtilityFollowerMgr::SyncSpellsOnLogin(Player* player)
@@ -402,13 +381,17 @@ void UtilityFollowerMgr::SyncSpellsOnLogin(Player* player)
 
     uint8 level = player->GetLevel();
 
-    // Banker
+    // Banker (Faction-Specific Spell)
     if (sUtilityFollowerConfig->BankerEnable &&
         sUtilityFollowerConfig->BankerSpellEnable &&
         sUtilityFollowerConfig->BankerSpellAutoLearn &&
         level >= sUtilityFollowerConfig->BankerSpellLearnLevel)
     {
-        TeachFollowerSpell(player, sUtilityFollowerConfig->BankerSpellId);
+        uint32 spellId = (player->GetTeam() == ALLIANCE) ?
+            sUtilityFollowerConfig->BankerSpellIdAlliance :
+            sUtilityFollowerConfig->BankerSpellIdHorde;
+
+        TeachFollowerSpell(player, spellId);
     }
 
     // Auctioneer
@@ -457,7 +440,11 @@ void UtilityFollowerMgr::CheckSpellsOnLevelChange(Player* player, uint8 oldLevel
             newLevel >= sUtilityFollowerConfig->BankerSpellLearnLevel &&
             oldLevel < sUtilityFollowerConfig->BankerSpellLearnLevel)
         {
-            TeachFollowerSpell(player, sUtilityFollowerConfig->BankerSpellId);
+            uint32 spellId = (player->GetTeam() == ALLIANCE) ?
+                sUtilityFollowerConfig->BankerSpellIdAlliance :
+                sUtilityFollowerConfig->BankerSpellIdHorde;
+
+            TeachFollowerSpell(player, spellId);
         }
 
         if (sUtilityFollowerConfig->AuctioneerEnable &&
@@ -482,13 +469,13 @@ void UtilityFollowerMgr::CheckSpellsOnLevelChange(Player* player, uint8 oldLevel
     {
         // De-level: remove spells if configured
         if (newLevel < sUtilityFollowerConfig->BankerSpellLearnLevel && player->HasSpell(sUtilityFollowerConfig->BankerSpellId))
-            player->removeSpell(sUtilityFollowerConfig->BankerSpellId, SPEC_MASK_ALL, false);
+            player->RemoveSpell(sUtilityFollowerConfig->BankerSpellId);
 
         if (newLevel < sUtilityFollowerConfig->AuctioneerSpellLearnLevel && player->HasSpell(sUtilityFollowerConfig->AuctioneerSpellId))
-            player->removeSpell(sUtilityFollowerConfig->AuctioneerSpellId, SPEC_MASK_ALL, false);
+            player->RemoveSpell(sUtilityFollowerConfig->AuctioneerSpellId);
 
         if (newLevel < sUtilityFollowerConfig->TrainerSpellLearnLevel && player->HasSpell(sUtilityFollowerConfig->TrainerSpellId))
-            player->removeSpell(sUtilityFollowerConfig->TrainerSpellId, SPEC_MASK_ALL, false);
+            player->RemoveSpell(sUtilityFollowerConfig->TrainerSpellId);
     }
 }
 
@@ -497,7 +484,7 @@ void UtilityFollowerMgr::HandleMapChange(Player* player)
     std::vector<FollowerType> activeTypes;
     {
         std::lock_guard<std::mutex> lock(_lock);
-        auto itr = _playerFollowers.find(player->GetGUID());
+        auto itr = _playerFollowers.find(player->GetObjectGuid());
         if (itr != _playerFollowers.end())
         {
             for (auto const& rec : itr->second)
@@ -578,40 +565,6 @@ void UtilityFollowerMgr::ClearAutoLearningSpell(ObjectGuid const& playerGuid, ui
     }
 }
 
-void UtilityFollowerMgr::ApplySpellCorrections()
-{
-    std::vector<uint32> spellIds = {
-        sUtilityFollowerConfig->TrainerSpellId,
-        sUtilityFollowerConfig->AuctioneerSpellId,
-        sUtilityFollowerConfig->BankerSpellId,
-        67368, // Bank Errand (standard Blizzard WotLK spell)
-        69046, // Pack Hobgoblin (standard Blizzard WotLK spell - Goblin icon)
-        54614, // Steam-Powered Auctioneer (standard Blizzard WotLK spell)
-        62978, // Summon Guardian (standard Blizzard WotLK spell)
-        39339, // Hand of Medivh (standard Blizzard WotLK spell)
-        62076, // Pack Mule (standard Blizzard WotLK spell)
-        54270, // Argent Tome Book Spawn
-        31114  // Medivh's Journal safeguard
-    };
-
-    for (uint32 id : spellIds)
-    {
-        if (!id)
-            continue;
-
-        if (SpellInfo* spellInfo = const_cast<SpellInfo*>(sSpellMgr->GetSpellInfo(id)))
-        {
-            spellInfo->RequiresSpellFocus = 0;
-            spellInfo->AreaGroupId = 0;
-            spellInfo->EquippedItemClass = -1;
-            spellInfo->Effects[EFFECT_0].Effect = SPELL_EFFECT_DUMMY;
-            spellInfo->Effects[EFFECT_0].TargetA = SpellImplicitTargetInfo(TARGET_UNIT_CASTER);
-            spellInfo->Effects[EFFECT_1].Effect = 0;
-            spellInfo->Effects[EFFECT_2].Effect = 0;
-        }
-    }
-}
-
 bool UtilityFollowerMgr::IsRealPlayer(Player const* player)
 {
     if (!player)
@@ -621,11 +574,10 @@ bool UtilityFollowerMgr::IsRealPlayer(Player const* player)
     if (!session)
         return false;
 
-    return !session->IsBot();
+    return !session->IsHeadless();
 }
 
 bool UtilityFollowerMgr::IsPlayerBot(Player const* player)
 {
     return !IsRealPlayer(player);
 }
-

@@ -1,5 +1,15 @@
+# Workspace, agent, testing, and internal verification files (Local Only - Never Push to GitHub)
+AGENTS.md
+.agents/
+tests/
+t/
+test_*
+docs/
+
 # Local tools & build artifacts
 tools/
 *.log
 .vs/
 *.user
+build/
+bin/

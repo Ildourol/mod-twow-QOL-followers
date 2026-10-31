@@ -1,5 +1,4 @@
-# CMakeLists.txt for mod-QOL-followers
-# Standard AzerothCore module build configuration
+# mod-QOL-followers-wotlk - Turtle WoW custom vMaNGOS module
+# Ported for Turtle WoW 1.18.1 (client build 7272)
 
-AC_ADD_SCRIPT("${CMAKE_CURRENT_LIST_DIR}/src")
-AC_ADD_CONFIG_FILE("${CMAKE_CURRENT_LIST_DIR}/conf/mod_qol_followers.conf.dist")
+TW_ADD_SCRIPTS("${CMAKE_CURRENT_LIST_DIR}/src")

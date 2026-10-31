@@ -1,39 +1,49 @@
 /*
- * Copyright (C) 2026+ AzerothCore Project
- * Released under GNU AGPL v3 license.
+ * Copyright (C) 2026+ Turtle WoW Custom vMaNGOS Project
+ * Ported for Turtle WoW 1.18.1 (client build 7272)
  */
 
 #include "UtilityFollowerAI.h"
-#include "Creature.h"
-#include "MotionMaster.h"
+#include "Objects/Creature.h"
+#include "Objects/Player.h"
+#include "Movement/MotionMaster.h"
 #include "ObjectAccessor.h"
-#include "Player.h"
+#include "Maps/Map.h"
 #include "UtilityFollowerConfig.h"
 #include "UtilityFollowerMgr.h"
 #include <cmath>
 
+#ifndef PET_FOLLOW_ANGLE
+#define PET_FOLLOW_ANGLE (M_PI_F / 2.0f)
+#endif
+
 UtilityFollowerAI::UtilityFollowerAI(Creature* creature, ObjectGuid ownerGuid, FollowerType type, uint32 displayId, float scale)
-    : PassiveAI(creature),
+    : CreatureAI(creature),
       _ownerGuid(ownerGuid),
       _type(type),
       _updateTimer(sUtilityFollowerConfig->FollowUpdateInterval),
       _displayId(displayId),
-      _scale(scale),
-      _isMovingToOwner(false),
-      _lastDestX(0.0f),
-      _lastDestY(0.0f)
+      _scale(scale)
 {
-    me->SetSpeed(MOVE_RUN, 1.0f);
-    me->SetSpeed(MOVE_WALK, 1.0f);
+    m_bMeleeAttack = false;
+    m_bCombatMovement = false;
+    m_creature->SetSpeedRate(MOVE_RUN, 1.0f);
+    m_creature->SetSpeedRate(MOVE_WALK, 1.0f);
 }
 
 void UtilityFollowerAI::Reset()
 {
-    me->SetSpeed(MOVE_RUN, 1.0f);
-    me->SetSpeed(MOVE_WALK, 1.0f);
+    m_creature->SetSpeedRate(MOVE_RUN, 1.0f);
+    m_creature->SetSpeedRate(MOVE_WALK, 1.0f);
+
+    if (Player* owner = ObjectAccessor::FindPlayer(_ownerGuid))
+    {
+        m_creature->GetMotionMaster()->Clear();
+        m_creature->GetMotionMaster()->MoveFollow(owner, sUtilityFollowerConfig->FollowDistance, PET_FOLLOW_ANGLE);
+    }
 }
 
-void UtilityFollowerAI::UpdateAI(uint32 diff)
+void UtilityFollowerAI::UpdateAI(uint32 const diff)
 {
     if (_updateTimer <= diff)
     {
@@ -42,130 +52,88 @@ void UtilityFollowerAI::UpdateAI(uint32 diff)
         Player* owner = ObjectAccessor::FindPlayer(_ownerGuid);
         if (!owner || !owner->IsInWorld())
         {
-            sUtilityFollowerMgr->UnregisterFollower(me->GetGUID());
-            me->DespawnOrUnsummon();
+            sUtilityFollowerMgr->UnregisterFollower(m_creature->GetObjectGuid());
+            m_creature->DespawnOrUnsummon();
             return;
         }
 
-        // Map transitions are handled by PlayerScript::OnPlayerMapChanged
-        if (owner->GetMap() != me->GetMap())
+        // Map transitions are handled by PlayerScript::OnMapChanged
+        if (owner->GetMap() != m_creature->GetMap())
             return;
 
         // If player is dead, pause following until resurrection
         if (!owner->IsAlive())
         {
-            if (_isMovingToOwner || me->HasUnitState(UNIT_STATE_FOLLOW_MOVE))
+            if (m_creature->HasUnitState(UNIT_STAT_FOLLOW))
             {
-                me->GetMotionMaster()->Clear();
-                me->StopMoving();
-                _isMovingToOwner = false;
+                m_creature->GetMotionMaster()->Clear();
+                m_creature->StopMoving();
             }
             return;
         }
 
-        float dist = me->GetExactDist(owner);
-
-        // If follower is interacting with player (gossip/bank/trainer), do not interrupt interaction unless far away
-        if (me->HasUnitState(UNIT_STATE_DISTRACTED) && dist <= sUtilityFollowerConfig->CatchUpDistance)
+        // If follower is interacting with player (gossip/bank/trainer/auction), keep position
+        if (m_creature->HasUnitState(UNIT_STAT_DISTRACTED))
             return;
 
-        // 1. Stuck / catch-up recovery
+        float dist = m_creature->GetDistance(owner);
+
+        // 1. Stuck / catch-up recovery: if too far away, safely teleport to owner
         if (dist > sUtilityFollowerConfig->CatchUpDistance)
         {
             if (sUtilityFollowerConfig->TeleportWhenStuck)
             {
-                me->NearTeleportTo(owner->GetPositionX(), owner->GetPositionY(), owner->GetPositionZ(), owner->GetOrientation());
-                me->GetMotionMaster()->Clear();
-                me->StopMoving();
-                _isMovingToOwner = false;
-                me->SetFacingToObject(owner);
-                me->SetSpeed(MOVE_RUN, 1.0f);
+                m_creature->NearTeleportTo(owner->GetPositionX(), owner->GetPositionY(), owner->GetPositionZ(), owner->GetOrientation());
+                m_creature->GetMotionMaster()->Clear();
+                m_creature->GetMotionMaster()->MoveFollow(owner, sUtilityFollowerConfig->FollowDistance, PET_FOLLOW_ANGLE);
+                m_creature->SetFacingToObject(owner);
+                m_creature->SetSpeedRate(MOVE_RUN, 1.0f);
                 return;
             }
         }
 
-        // 2. Arrival / Deadzone: If follower has reached close proximity (<= FollowDistance)
-        if (dist <= sUtilityFollowerConfig->FollowDistance)
+        // 2. Continuous following state maintenance
+        if (!m_creature->HasUnitState(UNIT_STAT_FOLLOW) && dist > sUtilityFollowerConfig->FollowDistance)
         {
-            if (_isMovingToOwner)
-            {
-                me->GetMotionMaster()->Clear();
-                me->StopMoving();
-                me->SetFacingToObject(owner);
-                _isMovingToOwner = false;
-            }
-            // If already stopped within the deadzone, do not react to player rotating or micro-movements.
-            return;
-        }
-
-        // 3. Follow Activation: If player has moved beyond StartFollowingDistance, or if follower is already pursuing
-        if (dist > sUtilityFollowerConfig->StartFollowingDistance || (_isMovingToOwner && dist > sUtilityFollowerConfig->FollowDistance))
-        {
-            // Calculate natural approach destination along current line of bearing from owner to follower.
-            // This ensures the companion approaches along its current direction rather than orbiting to the player's left side.
-            float bearing = owner->GetAngle(me);
-            float destX = owner->GetPositionX() + std::cos(bearing) * sUtilityFollowerConfig->FollowDistance;
-            float destY = owner->GetPositionY() + std::sin(bearing) * sUtilityFollowerConfig->FollowDistance;
-            float destZ = owner->GetMapHeight(destX, destY, owner->GetPositionZ());
-
-            // Check if recalculation is needed (if player moved significantly since last path was ordered)
-            float distFromLastDest = std::hypot(destX - _lastDestX, destY - _lastDestY);
-            if (!_isMovingToOwner || distFromLastDest > 1.5f)
-            {
-                // Always follow at default constant speed (no speed-up when left behind)
-                me->SetSpeed(MOVE_RUN, 1.0f);
-
-                me->GetMotionMaster()->MovePoint(POINT_FOLLOWER_APPROACH, destX, destY, destZ);
-                _lastDestX = destX;
-                _lastDestY = destY;
-                _isMovingToOwner = true;
-            }
+            m_creature->GetMotionMaster()->Clear();
+            m_creature->GetMotionMaster()->MoveFollow(owner, sUtilityFollowerConfig->FollowDistance, PET_FOLLOW_ANGLE);
+            m_creature->SetSpeedRate(MOVE_RUN, 1.0f);
         }
     }
     else
         _updateTimer -= diff;
 }
 
-void UtilityFollowerAI::MovementInform(uint32 /*motionType*/, uint32 pointId)
+void UtilityFollowerAI::MovementInform(uint32 /*motionType*/, uint32 /*pointId*/)
 {
-    if (pointId == POINT_FOLLOWER_APPROACH)
-    {
-        _isMovingToOwner = false;
-        if (Player* owner = ObjectAccessor::FindPlayer(_ownerGuid))
-            me->SetFacingToObject(owner);
-    }
-}
-
-void UtilityFollowerAI::JustEnteredCombat(Unit* /*who*/)
-{
-    me->CombatStop(true);
-    me->ClearInCombat();
-}
-
-void UtilityFollowerAI::DamageTaken(Unit* /*attacker*/, uint32& damage, DamageEffectType /*damagetype*/, SpellSchoolMask /*damageSchoolMask*/)
-{
-    damage = 0;
 }
 
 void UtilityFollowerAI::JustDied(Unit* /*killer*/)
 {
-    sUtilityFollowerMgr->UnregisterFollower(me->GetGUID());
+    sUtilityFollowerMgr->UnregisterFollower(m_creature->GetObjectGuid());
 }
 
 void UtilityFollowerAI::RestoreAppearance()
 {
-    me->SetDisplayId(_displayId);
-    me->SetNativeDisplayId(_displayId);
-    me->SetFloatValue(OBJECT_FIELD_SCALE_X, _scale);
+    m_creature->SetDisplayId(_displayId);
+    m_creature->SetNativeDisplayId(_displayId);
+    m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, _scale);
 
     if (Player* owner = ObjectAccessor::FindPlayer(_ownerGuid))
-        me->SetFaction(owner->GetFaction());
+        m_creature->SetFactionTemplateId(owner->GetFactionTemplateId());
 
-    me->SetUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_PACIFIED));
+    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING | UNIT_FLAG_PACIFIED);
 
-    if (_type == FollowerType::Trainer)
-        me->SetNpcFlag(UNIT_NPC_FLAG_TRAINER | UNIT_NPC_FLAG_GOSSIP);
+    uint32 npcFlags = UNIT_NPC_FLAG_GOSSIP;
+    if (_type == FollowerType::Banker)
+        npcFlags |= UNIT_NPC_FLAG_BANKER;
+    else if (_type == FollowerType::Auctioneer)
+        npcFlags |= UNIT_NPC_FLAG_AUCTIONEER;
 
-    me->SetSpeed(MOVE_RUN, 1.0f);
-    me->SetSpeed(MOVE_WALK, 1.0f);
+    // Notice: Trainer follower intentionally uses ONLY UNIT_NPC_FLAG_GOSSIP so that
+    // right-clicking opens the service gossip menu rather than bypassing it via CMSG_TRAINER_LIST.
+    m_creature->SetUInt32Value(UNIT_NPC_FLAGS, npcFlags);
+
+    m_creature->SetSpeedRate(MOVE_RUN, 1.0f);
+    m_creature->SetSpeedRate(MOVE_WALK, 1.0f);
 }

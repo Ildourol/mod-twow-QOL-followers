@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2026+ AzerothCore Project
- * Released under GNU AGPL v3 license.
+ * Copyright (C) 2026+ Turtle WoW Custom vMaNGOS Project
+ * Ported for Turtle WoW 1.18.1 (client build 7272)
  */
 
 #ifndef UTILITY_FOLLOWER_MGR_H
@@ -56,7 +56,6 @@ public:
 
     void UnregisterFollower(ObjectGuid const& creatureGuid);
     bool IsMapAllowed(Map const* map) const;
-    void ApplySpellCorrections();
 
     [[nodiscard]] static bool IsRealPlayer(Player const* player);
     [[nodiscard]] static bool IsPlayerBot(Player const* player);

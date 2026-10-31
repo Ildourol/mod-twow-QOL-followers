@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2026+ AzerothCore Project
- * Released under GNU AGPL v3 license.
+ * Copyright (C) 2026+ Turtle WoW Custom vMaNGOS Project
+ * Ported for Turtle WoW 1.18.1 (client build 7272)
  */
 
 #ifndef UTILITY_FOLLOWER_COMMON_H
@@ -8,7 +8,6 @@
 
 #include "Common.h"
 #include "SharedDefines.h"
-#include "Random.h"
 #include <cmath>
 
 enum class FollowerType : uint8
@@ -71,8 +70,15 @@ enum FollowerGossipAction : uint32
     ACTION_TALENT_RESET_EXECUTE         = 41,
     ACTION_TALENT_RESET_PET             = 42,
 
-    // Dual Spec Actions
-    ACTION_DUAL_SPEC_EXECUTE            = 45,
+    // Dual Spec / Saved Specs Actions (Slots 1 to 4)
+    ACTION_DUAL_SPEC_ACTIVATE_1         = 51,
+    ACTION_DUAL_SPEC_ACTIVATE_2         = 52,
+    ACTION_DUAL_SPEC_ACTIVATE_3         = 53,
+    ACTION_DUAL_SPEC_ACTIVATE_4         = 54,
+    ACTION_DUAL_SPEC_SAVE_1             = 61,
+    ACTION_DUAL_SPEC_SAVE_2             = 62,
+    ACTION_DUAL_SPEC_SAVE_3             = 63,
+    ACTION_DUAL_SPEC_SAVE_4             = 64,
 
     // Primary Professions (Base offset 100)
     ACTION_PROF_ALCHEMY                 = 101,
@@ -80,7 +86,6 @@ enum FollowerGossipAction : uint32
     ACTION_PROF_ENCHANTING              = 103,
     ACTION_PROF_ENGINEERING             = 104,
     ACTION_PROF_HERBALISM               = 105,
-    ACTION_PROF_INSCRIPTION             = 106,
     ACTION_PROF_JEWELCRAFTING           = 107,
     ACTION_PROF_LEATHERWORKING          = 108,
     ACTION_PROF_MINING                  = 109,
@@ -92,21 +97,15 @@ enum FollowerGossipAction : uint32
     ACTION_PROF_FIRST_AID               = 202,
     ACTION_PROF_FISHING                 = 203,
 
-    // Major Neutral Cities
-    ACTION_TELEPORT_DALARAN             = 301,
-    ACTION_TELEPORT_SHATTRATH           = 302,
-
     // Alliance Capitals
     ACTION_TELEPORT_STORMWIND           = 311,
     ACTION_TELEPORT_IRONFORGE           = 312,
     ACTION_TELEPORT_DARNASSUS           = 313,
-    ACTION_TELEPORT_EXODAR              = 314,
 
     // Horde Capitals
     ACTION_TELEPORT_ORGRIMMAR           = 321,
     ACTION_TELEPORT_UNDERCITY           = 322,
     ACTION_TELEPORT_THUNDER_BLUFF       = 323,
-    ACTION_TELEPORT_SILVERMOON          = 324,
 
     // Category Menus under "Other Destinations"
     ACTION_TELEPORT_CAT_DUNGEONS        = 340,
@@ -116,21 +115,15 @@ enum FollowerGossipAction : uint32
     // Dungeon Menus & Pages
     ACTION_TELEPORT_DUNGEONS_CLASSIC_P1 = 350,
     ACTION_TELEPORT_DUNGEONS_CLASSIC_P2 = 351,
-    ACTION_TELEPORT_DUNGEONS_TBC_P1     = 352,
-    ACTION_TELEPORT_DUNGEONS_TBC_P2     = 353,
-    ACTION_TELEPORT_DUNGEONS_WRATH_P1   = 354,
-    ACTION_TELEPORT_DUNGEONS_WRATH_P2   = 355,
 
     // Raid Menus
     ACTION_TELEPORT_RAIDS_CLASSIC       = 360,
-    ACTION_TELEPORT_RAIDS_TBC           = 361,
-    ACTION_TELEPORT_RAIDS_WRATH         = 362,
 
     // World Hubs (Thematic Destinations)
-    ACTION_TELEPORT_KARAZHAN            = 370,
-    ACTION_TELEPORT_CAVERNS_OF_TIME     = 371,
+    ACTION_TELEPORT_BOOTY_BAY           = 371,
     ACTION_TELEPORT_GADGETZAN           = 372,
-    ACTION_TELEPORT_BOOTY_BAY           = 373,
+    ACTION_TELEPORT_RATCHET             = 373,
+    ACTION_TELEPORT_EVERLOOK            = 374,
 
     // Vanilla Dungeons (400 - 449)
     ACTION_TELEPORT_RFC                 = 401,
@@ -161,118 +154,48 @@ enum FollowerGossipAction : uint32
     ACTION_TELEPORT_AQ40                = 454,
     ACTION_TELEPORT_ONYXIA              = 455,
     ACTION_TELEPORT_ZG                  = 456,
-
-    // TBC Dungeons (500 - 549)
-    ACTION_TELEPORT_RAMPARTS            = 501,
-    ACTION_TELEPORT_BLOOD_FURNACE       = 502,
-    ACTION_TELEPORT_SHATTERED_HALLS     = 503,
-    ACTION_TELEPORT_SLAVE_PENS          = 504,
-    ACTION_TELEPORT_UNDERBOG            = 505,
-    ACTION_TELEPORT_STEAMVAULT          = 506,
-    ACTION_TELEPORT_MANA_TOMBS          = 507,
-    ACTION_TELEPORT_AUCHENAI_CRYPTS     = 508,
-    ACTION_TELEPORT_SETHEKK_HALLS       = 509,
-    ACTION_TELEPORT_SHADOW_LABYRINTH    = 510,
-    ACTION_TELEPORT_DURNHOLDE           = 511,
-    ACTION_TELEPORT_BLACK_MORASS        = 512,
-    ACTION_TELEPORT_BOTANICA            = 513,
-    ACTION_TELEPORT_MECHANAR            = 514,
-    ACTION_TELEPORT_ARCATRAZ            = 515,
-    ACTION_TELEPORT_MAGISTERS_TERRACE   = 516,
-
-    // TBC Raids (550 - 569)
-    ACTION_TELEPORT_KARA_RAID           = 551,
-    ACTION_TELEPORT_GRUUL               = 552,
-    ACTION_TELEPORT_MAGTHERIDON         = 553,
-    ACTION_TELEPORT_SSC                 = 554,
-    ACTION_TELEPORT_THE_EYE             = 555,
-    ACTION_TELEPORT_HYJAL               = 556,
-    ACTION_TELEPORT_BLACK_TEMPLE        = 557,
-    ACTION_TELEPORT_SUNWELL             = 558,
-    ACTION_TELEPORT_ZULAMAN             = 559,
-
-    // WotLK Dungeons (600 - 649)
-    ACTION_TELEPORT_UTGARDE_KEEP        = 601,
-    ACTION_TELEPORT_THE_NEXUS           = 602,
-    ACTION_TELEPORT_AZJOL_NERUB         = 603,
-    ACTION_TELEPORT_AHN_KAHET           = 604,
-    ACTION_TELEPORT_DRAK_THARON         = 605,
-    ACTION_TELEPORT_VIOLET_HOLD         = 606,
-    ACTION_TELEPORT_GUNDRAK             = 607,
-    ACTION_TELEPORT_HALLS_OF_STONE      = 608,
-    ACTION_TELEPORT_HALLS_OF_LIGHTNING  = 609,
-    ACTION_TELEPORT_THE_OCULUS          = 610,
-    ACTION_TELEPORT_UTGARDE_PINNACLE    = 611,
-    ACTION_TELEPORT_CULLING_STRATHOLME  = 612,
-    ACTION_TELEPORT_TRIAL_OF_CHAMPION   = 613,
-    ACTION_TELEPORT_FORGE_OF_SOULS      = 614,
-    ACTION_TELEPORT_PIT_OF_SARON        = 615,
-    ACTION_TELEPORT_HALLS_OF_REFLECTION = 616,
-
-    // WotLK Raids (650 - 669)
-    ACTION_TELEPORT_NAXXRAMAS           = 651,
-    ACTION_TELEPORT_OBSIDIAN_SANCTUM    = 652,
-    ACTION_TELEPORT_EYE_OF_ETERNITY     = 653,
-    ACTION_TELEPORT_VAULT_OF_ARCHAVON   = 654,
-    ACTION_TELEPORT_ULDUAR              = 655,
-    ACTION_TELEPORT_TRIAL_OF_CRUSADER   = 656,
-    ACTION_TELEPORT_ICECROWN_CITADEL    = 657,
-    ACTION_TELEPORT_RUBY_SANCTUM        = 658
+    ACTION_TELEPORT_NAXXRAMAS           = 457
 };
 
-// Verified WotLK Class Trainer Template IDs - Corrected for accurate classes and non-hostility
-enum AllianceClassTrainerTemplate : uint32
+// Dedicated Follower & Proxy IDs created in 20261030000000_world_qol_followers.sql
+enum FollowerDedicatedEntries : uint32
 {
-    TRAINER_ALLIANCE_WARRIOR      = 914,   // Ander Germaine (Stormwind - Warrior Trainer)
-    TRAINER_ALLIANCE_PALADIN      = 5492,  // Katherine the Pure (Stormwind - Paladin Trainer)
-    TRAINER_ALLIANCE_HUNTER       = 5515,  // Einris Brightspear (Stormwind - Hunter Trainer)
-    TRAINER_ALLIANCE_ROGUE        = 918,   // Osborne the Night Man (Stormwind - Rogue Trainer)
-    TRAINER_ALLIANCE_PRIEST       = 11401, // Priestess Alathea (Stormwind - Priest Trainer)
-    TRAINER_ALLIANCE_DK           = 28474, // Amal'thazad (Acherus - Death Knight Trainer)
-    TRAINER_ALLIANCE_SHAMAN       = 20407, // Farseer Umbrua (Exodar / Stormwind - Shaman Trainer)
-    TRAINER_ALLIANCE_MAGE         = 328,   // Zaldimar Wefhellt (Stormwind - Mage Trainer)
-    TRAINER_ALLIANCE_WARLOCK      = 5495,  // Ursula Deline (Stormwind - Warlock Trainer)
-    TRAINER_ALLIANCE_DRUID        = 4217   // Mathrengyl Bearwalker (Darnassus - Druid Trainer)
-};
+    ENTRY_BANKER_MULE                   = 70100,
+    ENTRY_BANKER_KODO                   = 70103,
+    ENTRY_AUCTIONEER_BEARDO             = 70101,
+    ENTRY_UTILITY_HELPER                = 70102,
+    ENTRY_KIRIN_TOR_FAMILIAR           = 70102,
+    ENTRY_MEDIVH_GUARDIAN               = 70102, // Backward-compatible alias
 
-enum HordeClassTrainerTemplate : uint32
-{
-    TRAINER_HORDE_WARRIOR         = 4593,  // Christoph Walker (Undercity - Warrior Trainer)
-    TRAINER_HORDE_PALADIN         = 16681, // Champion Bachi (Silvermoon - Paladin Trainer)
-    TRAINER_HORDE_HUNTER          = 3406,  // Xor'juul (Orgrimmar - Hunter Trainer)
-    TRAINER_HORDE_ROGUE           = 3328,  // Ormok (Orgrimmar - Rogue Trainer)
-    TRAINER_HORDE_PRIEST          = 6018,  // Ur'kyo (Orgrimmar - Priest Trainer)
-    TRAINER_HORDE_DK              = 28472, // Lord Thorval (Acherus - Death Knight Trainer)
-    TRAINER_HORDE_SHAMAN          = 3032,  // Beram Skychaser (Thunder Bluff - Shaman Trainer)
-    TRAINER_HORDE_MAGE            = 5885,  // Deino (Orgrimmar - Mage Trainer)
-    TRAINER_HORDE_WARLOCK         = 3324,  // Grol'dar (Orgrimmar - Warlock Trainer)
-    TRAINER_HORDE_DRUID           = 3033   // Turak Runetotem (Thunder Bluff - Druid Trainer)
-};
+    // Dedicated Class Trainer Proxies (70110 - 70118)
+    ENTRY_PROXY_TRAINER_WARRIOR         = 70110,
+    ENTRY_PROXY_TRAINER_PALADIN         = 70111,
+    ENTRY_PROXY_TRAINER_HUNTER          = 70112,
+    ENTRY_PROXY_TRAINER_ROGUE           = 70113,
+    ENTRY_PROXY_TRAINER_PRIEST          = 70114,
+    ENTRY_PROXY_TRAINER_SHAMAN          = 70115,
+    ENTRY_PROXY_TRAINER_MAGE            = 70116,
+    ENTRY_PROXY_TRAINER_WARLOCK         = 70117,
+    ENTRY_PROXY_TRAINER_DRUID           = 70118,
 
-// Verified WotLK Grand Master Profession Trainer Template IDs (Dalaran neutral masters)
-enum ProfessionTrainerTemplate : uint32
-{
-    // Primary
-    TRAINER_ALCHEMY        = 26953, // Linzy Blackbolt
-    TRAINER_BLACKSMITHING  = 26952, // Alard Schmied
-    TRAINER_ENCHANTING     = 26906, // Alexis Marlow
-    TRAINER_ENGINEERING    = 26907, // Tisha Longbridge
-    TRAINER_HERBALISM      = 26910, // Fayin Whisperleaf
-    TRAINER_INSCRIPTION    = 26916, // Mindri Dinkles
-    TRAINER_JEWELCRAFTING  = 26915, // Ounhulo
-    TRAINER_LEATHERWORKING = 26996, // Awan Iceborn
-    TRAINER_MINING         = 26912, // Grumbol Stoutpick
-    TRAINER_SKINNING       = 26913, // Frederic Burrhus
-    TRAINER_TAILORING      = 26914, // Benjamin Clegg
-
-    // Secondary
-    TRAINER_COOKING        = 26905, // Brom Brewbaster
-    TRAINER_FIRST_AID      = 26956, // Sally Tompkins
-    TRAINER_FISHING        = 26909  // Byron Welwick
+    // Dedicated Profession Trainer Proxies (70120 - 70132)
+    ENTRY_PROXY_TRAINER_ALCHEMY         = 70120,
+    ENTRY_PROXY_TRAINER_BLACKSMITHING   = 70121,
+    ENTRY_PROXY_TRAINER_ENCHANTING      = 70122,
+    ENTRY_PROXY_TRAINER_ENGINEERING     = 70123,
+    ENTRY_PROXY_TRAINER_HERBALISM       = 70124,
+    ENTRY_PROXY_TRAINER_LEATHERWORKING  = 70125,
+    ENTRY_PROXY_TRAINER_MINING          = 70126,
+    ENTRY_PROXY_TRAINER_SKINNING        = 70127,
+    ENTRY_PROXY_TRAINER_TAILORING       = 70128,
+    ENTRY_PROXY_TRAINER_JEWELCRAFTING   = 70129,
+    ENTRY_PROXY_TRAINER_COOKING         = 70130,
+    ENTRY_PROXY_TRAINER_FIRST_AID       = 70131,
+    ENTRY_PROXY_TRAINER_FISHING         = 70132
 };
 
 // Teleport Destination Representation
-struct TeleportLocation
+struct FollowerTeleportLocation
 {
     uint32 action;
     char const* name;

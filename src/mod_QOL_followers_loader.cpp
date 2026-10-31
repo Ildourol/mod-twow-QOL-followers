@@ -1,14 +1,27 @@
 /*
- * Copyright (C) 2026+ AzerothCore Project
- * Released under GNU AGPL v3 license.
+ * Copyright (C) 2026+ Turtle WoW Custom vMaNGOS Project
+ * Ported for Turtle WoW 1.18.1 (client build 7272)
  */
 
-// AzerothCore module script loader entry point.
-// AzerothCore automatically invokes Add<module-folder-with-underscores>Scripts() on startup.
+void AddUtilityFollowerGossipScripts();
+void AddUtilityFollowerLifecycleScripts();
+void AddUtilityFollowerCommandScripts();
+void AddUtilityFollowerDataValidationScripts();
 
-void AddUtilityFollowerScripts();
-
-void Addmod_QOL_followersScripts()
+void Addmod_QOL_followers_wotlkScripts()
 {
-    AddUtilityFollowerScripts();
+    AddUtilityFollowerDataValidationScripts();
+    AddUtilityFollowerGossipScripts();
+    AddUtilityFollowerLifecycleScripts();
+    AddUtilityFollowerCommandScripts();
+}
+
+void Addmod_qol_followersScripts()
+{
+    Addmod_QOL_followers_wotlkScripts();
+}
+
+void Addmod_twow_QOL_followersScripts()
+{
+    Addmod_QOL_followers_wotlkScripts();
 }

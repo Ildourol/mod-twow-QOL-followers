@@ -1,9 +1,9 @@
 #
-# Copyright (C) 2026+ AzerothCore Project
 # Standalone Utility Follower Module Configuration
+# Designed for Turtle WoW Custom vMaNGOS (tortoise-wow targeting client 1.18.1.7272)
 #
 
-[worldserver]
+[ModuleConf]
 
 ###################################################################################################
 # UTILITY FOLLOWERS CONFIGURATION
@@ -40,7 +40,7 @@ UtilityFollowers.Auctioneer.Enable = 1
 
 #
 #    UtilityFollowers.Trainer.Enable
-#        Description: Enable or disable the player-owned Trainer Book follower.
+#        Description: Enable or disable the player-owned Utility Helper (Trainer & Teleporter) follower.
 #        Default:     1 - Enabled
 #                     0 - Disabled
 #
@@ -52,24 +52,24 @@ UtilityFollowers.Trainer.Enable = 1
 ###################################################################################################
 #
 #    UtilityFollowers.FollowDistance
-#        Description: The preferred steady-state distance (in yards) between the owner and follower.
-#        Default:     3.5
+#        Description: The preferred steady-state distance (in yards) between owner and follower.
+#        Default:     3.0
 #
 
-UtilityFollowers.FollowDistance = 3.5
+UtilityFollowers.FollowDistance = 3.0
 
 #
 #    UtilityFollowers.StartFollowingDistance
 #        Description: Distance (in yards) beyond which the follower resumes moving toward the owner.
-#                     Creates a comfortable deadzone so followers do not jitter or react to in-place character turns.
-#        Default:     7.0
+#                     Creates a comfortable deadzone so followers do not jitter on in-place turns.
+#        Default:     4.0
 #
 
-UtilityFollowers.StartFollowingDistance = 7.0
+UtilityFollowers.StartFollowingDistance = 4.0
 
 #
 #    UtilityFollowers.CatchUpDistance
-#        Description: Distance (in yards) beyond which the follower uses safe catch-up/teleportation.
+#        Description: Distance (in yards) beyond which the follower teleports directly to the owner.
 #        Default:     30.0
 #
 
@@ -77,9 +77,8 @@ UtilityFollowers.CatchUpDistance = 30.0
 
 #
 #    UtilityFollowers.FollowUpdateInterval
-#        Description: Cadence (in milliseconds) at which follower movement logic and state are checked.
-#                     Prevents excessive CPU utilization and path recalculation every server tick.
-#        Default:     300 (0.3 seconds for smooth following)
+#        Description: Cadence (in milliseconds) at which follower movement logic and state are evaluated.
+#        Default:     300 (0.3 seconds)
 #
 
 UtilityFollowers.FollowUpdateInterval = 300
@@ -98,15 +97,15 @@ UtilityFollowers.TeleportWhenStuck = 1
 ###################################################################################################
 #
 #    UtilityFollowers.MaxActive
-#        Description: Maximum number of utility followers a player can have active at the same time.
-#        Default:     1 (Allows 1 active QoL follower at a time by default)
+#        Description: Maximum number of utility followers a player can have active concurrently.
+#        Default:     1
 #
 
 UtilityFollowers.MaxActive = 1
 
 #
 #    UtilityFollowers.MaxActivePolicy
-#        Description: Policy when the player attempts to summon another follower while already at MaxActive.
+#        Description: Policy when the player attempts to summon another follower while at MaxActive.
 #                     "Reject"        - Fail the new summon cleanly with a notification message.
 #                     "ReplaceOldest" - Despawn the player's oldest active follower and summon the new one.
 #        Default:     "ReplaceOldest"
@@ -115,11 +114,11 @@ UtilityFollowers.MaxActive = 1
 UtilityFollowers.MaxActivePolicy = "ReplaceOldest"
 
 ###################################################################################################
-# ENVIRONMENT & PVP RESTRICTIONS
+# ENVIRONMENT RESTRICTIONS
 ###################################################################################################
 #
 #    UtilityFollowers.AllowInWorld
-#        Description: Allow followers in standard open world maps (continents).
+#        Description: Allow followers in standard open world continent maps.
 #        Default:     1 - Allowed
 #                     0 - Disabled
 #
@@ -155,8 +154,8 @@ UtilityFollowers.AllowInBattlegrounds = 0
 
 #
 #    UtilityFollowers.AllowInArenas
-#        Description: Allow followers inside Arena PvP instances.
-#        Default:     0 - Disabled (prevent PvP interference)
+#        Description: Allow followers inside Arena instances.
+#        Default:     0 - Disabled
 #                     1 - Allowed
 #
 
@@ -165,87 +164,94 @@ UtilityFollowers.AllowInArenas = 0
 #
 #    UtilityFollowers.AutoSpawn
 #        Description: Automatically restore active followers on login.
-#        Default:     0 - Disabled (players summon their followers via spells/commands)
+#        Default:     0 - Disabled (players summon their followers on demand via spell or command)
 #                     1 - Enabled
 #
 
 UtilityFollowers.AutoSpawn = 0
 
 ###################################################################################################
-# FOLLOWER APPEARANCE CONFIGURATION
+# FOLLOWER APPEARANCE & CREATURE TEMPLATES
 ###################################################################################################
 #
-#    Creature Template Entries & Native Display IDs (WotLK 3.3.5a verified data):
-#      - Banker Horde: Pack Kodo (Creature 10636, DisplayId 7933)
-#      - Banker Alliance: Pack Mule (Creature 16225, DisplayId 14546)
-#      - Auctioneer: Goblin Auctioneer (Creature 8661, DisplayId 7993)
-#      - Medivh (Trainer & Teleporter): The Last Guardian (Creature 15608, DisplayId 18718)
+#    Dedicated Turtle WoW Custom Creature Template IDs:
+#      - Alliance Banker: 70100 (Pack Mule, Display 14546)
+#      - Horde Banker:    70103 (Pack Kodo, Display 7933)
+#      - Auctioneer:      70101 (Auctioneer Beardo, Display 7993)
+#      - Kirin Tor Familiar: 70102 (Trainer & Teleporter, Display 14432)
 #
 
 # Banker Appearance
-UtilityFollowers.Banker.CreatureEntry.Horde = 10636
-UtilityFollowers.Banker.CreatureEntry.Alliance = 16225
+UtilityFollowers.Banker.CreatureEntry.Horde = 70103
+UtilityFollowers.Banker.CreatureEntry.Alliance = 70100
 UtilityFollowers.Banker.Horde.DisplayId = 7933
 UtilityFollowers.Banker.Alliance.DisplayId = 14546
 UtilityFollowers.Banker.Scale = 1.0
 
 # Auctioneer Appearance
-UtilityFollowers.Auctioneer.CreatureEntry = 8661
+UtilityFollowers.Auctioneer.CreatureEntry = 70101
 UtilityFollowers.Auctioneer.DisplayId = 7993
 UtilityFollowers.Auctioneer.Scale = 1.0
 
-# Medivh (Trainer & Teleporter) Appearance
-UtilityFollowers.Trainer.CreatureEntry = 15608
-UtilityFollowers.Trainer.DisplayId = 18718
-UtilityFollowers.Trainer.Scale = 1.0
+# Kirin Tor Familiar (Trainer & Teleporter) Appearance
+# Note: In Turtle WoW 1.18.1 client DBC, Kirin Tor Familiar is Display 14432 (Mana Fiend model),
+#       matching summon spell 46465 ("Kirin Tor Familiar").
+UtilityFollowers.Trainer.CreatureEntry = 70102
+UtilityFollowers.Trainer.DisplayId = 14432
+UtilityFollowers.Trainer.Scale = 0.5
 
 ###################################################################################################
-# DEDICATED SUMMON SPELLS CONFIGURATION
+# DEDICATED SUMMON SPELLS CONFIGURATION (NATIVE TURTLE WOW DBC COMPATIBLE)
 ###################################################################################################
 #
-#    Summon Spells:
-#    Each follower has its own independent summon spell. Casting the spell when the follower is
-#    absent summons it; casting the spell when the follower is present dismisses only that follower.
+#    Characters automatically learn summon spells when reaching the configured level requirement.
+#    Casting the spell from the Spellbook or action bar toggles the follower (summon or dismiss).
 #
-#    Standard Blizzard WotLK In-Game Spells (No client MPQ patch required):
-#      - Banker:     Spell 67368 ("Bank Errand" - Icon: inv_misc_coin_02 [gold coin])
-#      - Auctioneer: Spell 54614 ("Steam-Powered Auctioneer" - Icon: Trade_Engineering [brass gear])
-#      - Trainer:    Spell 62978 ("Summon Guardian" - Icon: Spell_Nature_WispSplodeGreen [radiant orb])
+#    Native Turtle WoW Spell IDs (100% compatible with untouched 1.18.1 client DBCs):
+#      - Banker Alliance: Spell 46459 ("Forworn Mule" - Pack Mule companion spell)
+#      - Banker Horde:    Spell 46483 ("Caravan Kodo" - Pack Kodo companion spell)
+#      - Auctioneer:      Spell 46460 ("Mechanical Auctioneer" - Steam-powered auctioneer companion spell)
+#      - Utility Helper:  Spell 46465 ("Kirin Tor Familiar" - Radiant Kirin Tor familiar companion spell)
 #
-#    All spells are 100% native Blizzard WotLK spells with instant cast, 0 mana, 0 focus, and 0 area restrictions.
-#    Players connect with standard, untouched 3.3.5a WoW clients without needing patch-A.MPQ!
+#    Followers can also be summoned via chat commands:
+#      .utility banker
+#      .utility auctioneer
+#      .utility helper (or .utility trainer)
+#      .utility dismiss
 #
 
 #
 #    UtilityFollowers.Spells.DefaultLearnLevel
-#        Description: Global default character level at which follower spells become available.
-#        Default:     10
+#        Description: Global default character level at which follower spells are automatically learned.
+#        Default:     1 (Available right from character creation, or set to 10)
 #
 
-UtilityFollowers.Spells.DefaultLearnLevel = 10
+UtilityFollowers.Spells.DefaultLearnLevel = 1
 
-# Banker Summon Spell
+# Banker Summon Spells
 UtilityFollowers.Banker.Spell.Enable = 1
 UtilityFollowers.Banker.Spell.AutoLearn = 1
-UtilityFollowers.Banker.Spell.LearnLevel = 10
-UtilityFollowers.Banker.Spell.SpellId = 67368
+UtilityFollowers.Banker.Spell.LearnLevel = 1
+UtilityFollowers.Banker.Spell.SpellId = 46459
+UtilityFollowers.Banker.Spell.SpellId.Alliance = 46459
+UtilityFollowers.Banker.Spell.SpellId.Horde = 46483
 
 # Auctioneer Summon Spell
 UtilityFollowers.Auctioneer.Spell.Enable = 1
 UtilityFollowers.Auctioneer.Spell.AutoLearn = 1
-UtilityFollowers.Auctioneer.Spell.LearnLevel = 10
-UtilityFollowers.Auctioneer.Spell.SpellId = 54614
+UtilityFollowers.Auctioneer.Spell.LearnLevel = 1
+UtilityFollowers.Auctioneer.Spell.SpellId = 46460
 
-# Trainer Summon Spell
+# Utility Helper Summon Spell
 UtilityFollowers.Trainer.Spell.Enable = 1
 UtilityFollowers.Trainer.Spell.AutoLearn = 1
-UtilityFollowers.Trainer.Spell.LearnLevel = 10
-UtilityFollowers.Trainer.Spell.SpellId = 62978
+UtilityFollowers.Trainer.Spell.LearnLevel = 1
+UtilityFollowers.Trainer.Spell.SpellId = 46465
 
 #
 #    UtilityFollowers.Spells.SyncOnLogin
-#        Description: Synchronize follower spells on player login. Automatically teaches any missing
-#                     eligible auto-learn spells to characters whose level meets the requirement.
+#        Description: Synchronize follower spells on login. Automatically teaches any missing
+#                     spells to characters whose level meets the requirement.
 #        Default:     1 - Enabled
 #                     0 - Disabled
 #
@@ -254,7 +260,7 @@ UtilityFollowers.Spells.SyncOnLogin = 1
 
 #
 #    UtilityFollowers.Spells.RemoveIfBelowLevel
-#        Description: Remove a summon spell if a player de-levels below the required learn level.
+#        Description: Remove a summon spell if a character de-levels below the required learn level.
 #        Default:     0 - Disabled (spells remain known)
 #                     1 - Enabled
 #
@@ -263,20 +269,20 @@ UtilityFollowers.Spells.RemoveIfBelowLevel = 0
 
 #
 #    UtilityFollowers.Spells.PreventActionBarAutoAdd
-#        Description: Prevent follower spells from being automatically placed on the player's
-#                     action bar when learned. Spells remain accessible in the Spellbook.
-#        Default:     1 - Enabled (recommended)
-#                     0 - Disabled
+#        Description: Prevent follower spells from automatically taking over action bar slots when learned.
+#                     Spells remain readily accessible in the player's Spellbook.
+#        Default:     0 - Place on action bar
+#                     1 - Spellbook only
 #
 
-UtilityFollowers.Spells.PreventActionBarAutoAdd = 1
+UtilityFollowers.Spells.PreventActionBarAutoAdd = 0
 
 ###################################################################################################
 # TRAINER FOLLOWER SERVICE CONFIGURATION
 ###################################################################################################
 #
 #    UtilityFollowers.Trainer.FreeTraining
-#        Description: Whether class and profession training spells cost 0 money.
+#        Description: Whether class and profession training spells cost 0 copper.
 #        Default:     0 - Normal costs apply
 #                     1 - Free training
 #
@@ -294,7 +300,7 @@ UtilityFollowers.Trainer.IgnoreLevelRequirements = 0
 
 #
 #    UtilityFollowers.Trainer.FreeTalentReset
-#        Description: Whether resetting talents through the Trainer Book is free of cost.
+#        Description: Whether resetting talents through Kirin Tor Familiar is free of cost.
 #        Default:     0 - Normal progressive reset costs apply
 #                     1 - Free talent reset
 #
@@ -303,19 +309,18 @@ UtilityFollowers.Trainer.FreeTalentReset = 0
 
 #
 #    UtilityFollowers.Trainer.ProfessionMode
-#        Description: Profession training behavior mode.
-#                     "Trainer" - Opens the official Grand Master profession trainer window.
+#        Description: Profession training behavior mode ("Trainer").
 #        Default:     "Trainer"
 #
 
 UtilityFollowers.Trainer.ProfessionMode = "Trainer"
 
 ###################################################################################################
-# MEDIVH TELEPORTATION SERVICE CONFIGURATION
+# TRAINER & TELEPORTATION SERVICE CONFIGURATION
 ###################################################################################################
 #
 #    UtilityFollowers.Trainer.Teleport.Enable
-#        Description: Enable or disable Medivh's teleportation service to capital cities & hubs.
+#        Description: Enable or disable Kirin Tor Familiar's teleportation service to capital cities & hubs.
 #        Default:     1 - Enabled
 #                     0 - Disabled
 #
@@ -333,7 +338,7 @@ UtilityFollowers.Trainer.Teleport.CombatCheck = 1
 
 #
 #    UtilityFollowers.Trainer.Teleport.Cost
-#        Description: Gold cost (in copper) charged per teleportation (e.g. 10000 = 1 gold).
+#        Description: Copper cost charged per teleportation (e.g. 10000 = 1 gold).
 #        Default:     0 - Free
 #
 
@@ -348,25 +353,17 @@ UtilityFollowers.Trainer.Teleport.Cost = 0
 UtilityFollowers.Trainer.Teleport.MinLevel = 1
 
 #
-#    UtilityFollowers.Trainer.Teleport.DalaranMinLevel
-#        Description: Minimum character level required to teleport specifically to Dalaran.
-#        Default:     68 (Standard WotLK expansion gating)
-#
-
-UtilityFollowers.Trainer.Teleport.DalaranMinLevel = 68
-
-#
 #    UtilityFollowers.Trainer.Teleport.EnableExtraLocations
-#        Description: Enable submenu for thematic bonus locations (Karazhan, Caverns of Time, Gadgetzan, Booty Bay).
+#        Description: Enable submenu for neutral hubs & quest hubs (Booty Bay, Gadgetzan, Ratchet, Everlook).
 #        Default:     1 - Enabled
 #                     0 - Disabled
 #
 
 UtilityFollowers.Trainer.Teleport.EnableExtraLocations = 1
- 
+
 #
 #    UtilityFollowers.Trainer.Teleport.EnableDungeons
-#        Description: Enable submenus for all Vanilla, TBC, and Wrath 5-player dungeons.
+#        Description: Enable submenus for Classic Vanilla 5-player dungeons (Map 0 & 1).
 #        Default:     1 - Enabled
 #                     0 - Disabled
 #
@@ -375,7 +372,7 @@ UtilityFollowers.Trainer.Teleport.EnableDungeons = 1
 
 #
 #    UtilityFollowers.Trainer.Teleport.EnableRaids
-#        Description: Enable submenus for all Vanilla, TBC, and Wrath raids.
+#        Description: Enable submenus for Classic Vanilla raids (Map 0 & 1: MC, Onyxia, BWL, ZG, AQ20/40, Naxxramas).
 #        Default:     1 - Enabled
 #                     0 - Disabled
 #

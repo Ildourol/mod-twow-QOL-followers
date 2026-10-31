@@ -1,32 +1,33 @@
 /*
- * Copyright (C) 2026+ AzerothCore Project
- * Released under GNU AGPL v3 license.
+ * Copyright (C) 2026+ Turtle WoW Custom vMaNGOS Project
+ * Ported for Turtle WoW 1.18.1 (client build 7272)
  */
 
 #ifndef UTILITY_FOLLOWER_AI_H
 #define UTILITY_FOLLOWER_AI_H
 
-#include "PassiveAI.h"
+#include "AI/CreatureAI.h"
 #include "UtilityFollowerCommon.h"
 #include "ObjectGuid.h"
 
 class Creature;
+class Unit;
 
-class UtilityFollowerAI : public PassiveAI
+class UtilityFollowerAI : public CreatureAI
 {
 public:
     explicit UtilityFollowerAI(Creature* creature, ObjectGuid ownerGuid, FollowerType type, uint32 displayId, float scale);
 
-    void Reset() override;
-    void UpdateAI(uint32 diff) override;
+    void Reset();
+    void UpdateAI(uint32 const diff) override;
 
     void MovementInform(uint32 motionType, uint32 pointId) override;
 
-    void AttackStart(Unit*) override { }
-    void MoveInLineOfSight(Unit*) override { }
-    void EnterEvadeMode(EvadeReason /*why*/) override { }
-    void JustEnteredCombat(Unit* /*who*/) override;
-    void DamageTaken(Unit* /*attacker*/, uint32& damage, DamageEffectType /*damagetype*/, SpellSchoolMask /*damageSchoolMask*/) override;
+    void AttackStart(Unit*) override {}
+    void MoveInLineOfSight(Unit*) override {}
+    void AttackedBy(Unit*) override {}
+    void EnterEvadeMode() override {}
+    void DamageTaken(Unit* /*done_by*/, uint32& damage) override { damage = 0; }
     void JustDied(Unit* /*killer*/) override;
 
     [[nodiscard]] FollowerType GetType() const { return _type; }
@@ -40,10 +41,6 @@ private:
     uint32 _updateTimer;
     uint32 _displayId;
     float _scale;
-
-    bool _isMovingToOwner{false};
-    float _lastDestX{0.0f};
-    float _lastDestY{0.0f};
 };
 
 #endif // UTILITY_FOLLOWER_AI_H
