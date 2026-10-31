@@ -9,6 +9,7 @@
 #include "UtilityFollowerCommon.h"
 #include "UtilityFollowerConfig.h"
 #include "UtilityFollowerMgr.h"
+#include "UtilityFollowerServices.h"
 #include "WorldSession.h"
 #include <cstring>
 #include <string>
@@ -57,6 +58,20 @@ public:
                 sUtilityFollowerMgr->HandleSpellSummon(player, FollowerType::Trainer);
                 return false;
             }
+            else if (sub == "restore" || sub == "reset")
+            {
+                if (Creature* follower = sUtilityFollowerMgr->GetFollower(player, FollowerType::Trainer))
+                {
+                    UtilityFollowerServices::RestoreTrainerFamiliar(follower);
+                    handler->SendSysMessage("Kirin Tor Familiar restored to default form.");
+                    return false;
+                }
+                else
+                {
+                    handler->SendSysMessage("You do not have an active Kirin Tor Familiar.");
+                    return false;
+                }
+            }
             else if (sub == "dismiss")
             {
                 std::string const target = takeWord();
@@ -89,7 +104,8 @@ public:
                 handler->SendSysMessage("=== Utility Followers Commands ===");
                 handler->SendSysMessage("  .utility banker       - Summon or dismiss your personal banker");
                 handler->SendSysMessage("  .utility auctioneer   - Summon or dismiss your personal auctioneer");
-                handler->SendSysMessage("  .utility helper       - Summon or dismiss Kirin Tor Familiar (Trainer & Teleporter)");
+                handler->SendSysMessage("  .utility familiar     - Summon or dismiss Kirin Tor Familiar (Trainer & Teleporter)");
+                handler->SendSysMessage("  .utility restore      - Restore Kirin Tor Familiar from trainer mode to default form");
                 handler->SendSysMessage("  .utility dismiss [all|banker|auctioneer|helper|familiar] - Dismiss active followers");
                 if (player->IsGameMaster() || handler->GetSession()->GetSecurity() >= SEC_ADMINISTRATOR)
                     handler->SendSysMessage("  .utility reload       - Reload module configuration");

@@ -96,7 +96,7 @@ public:
     bool TrainerFreeTalentReset{false};
     std::string TrainerProfessionMode{"Trainer"};
 
-    // Medivh Teleportation policy
+    // Kirin Tor Familiar Teleportation policy
     bool TrainerTeleportEnable{true};
     bool TrainerTeleportCombatCheck{true};
     uint32 TrainerTeleportCost{0};

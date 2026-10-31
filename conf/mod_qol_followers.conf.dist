@@ -196,7 +196,7 @@ UtilityFollowers.Auctioneer.Scale = 1.0
 # Kirin Tor Familiar (Trainer & Teleporter) Appearance
 # Note: In Turtle WoW 1.18.1 client DBC, Kirin Tor Familiar is Display 14432 (Mana Fiend model),
 #       matching summon spell 46465 ("Kirin Tor Familiar").
-UtilityFollowers.Trainer.CreatureEntry = 70102
+UtilityFollowers.Trainer.CreatureEntry = 70104
 UtilityFollowers.Trainer.DisplayId = 14432
 UtilityFollowers.Trainer.Scale = 0.5
 

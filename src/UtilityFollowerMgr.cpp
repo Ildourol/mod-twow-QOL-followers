@@ -15,6 +15,7 @@
 #include "WorldSession.h"
 #include "UtilityFollowerAI.h"
 #include "UtilityFollowerConfig.h"
+#include "UtilityFollowerServices.h"
 
 #ifndef PET_FOLLOW_ANGLE
 #define PET_FOLLOW_ANGLE (M_PI_F / 2.0f)
@@ -226,7 +227,7 @@ bool UtilityFollowerMgr::SummonFollower(Player* player, FollowerType type)
     {
         case FollowerType::Banker:
         {
-            bool isAlliance = (player->GetTeam() == ALLIANCE);
+            bool isAlliance = (player->GetTeam() == ALLIANCE || player->GetTeamId() == TEAM_ALLIANCE);
             creatureEntry = isAlliance ? sUtilityFollowerConfig->BankerCreatureEntryAlliance : sUtilityFollowerConfig->BankerCreatureEntryHorde;
             displayId = isAlliance ? sUtilityFollowerConfig->BankerAllianceDisplayId : sUtilityFollowerConfig->BankerHordeDisplayId;
             scale = sUtilityFollowerConfig->BankerScale;
@@ -246,8 +247,8 @@ bool UtilityFollowerMgr::SummonFollower(Player* player, FollowerType type)
             creatureEntry = sUtilityFollowerConfig->TrainerCreatureEntry;
             displayId = sUtilityFollowerConfig->TrainerDisplayId;
             scale = sUtilityFollowerConfig->TrainerScale;
-            // Notice: Utility Helper deliberately uses ONLY UNIT_NPC_FLAG_GOSSIP (npcFlags is already initialized to 1)
-            // DO NOT set UNIT_NPC_FLAG_TRAINER! The helper handles training via short-lived proxy summons.
+            // Kirin Tor Familiar starts with UNIT_NPC_FLAG_GOSSIP. When training is requested,
+            // it dynamically adapts to the canonical class/profession trainer template.
             break;
         }
         default:
@@ -359,9 +360,25 @@ void UtilityFollowerMgr::DespawnAllFollowers(Player* player)
 
 void UtilityFollowerMgr::HandleSpellSummon(Player* player, FollowerType type)
 {
-    // Toggle behavior: present -> dismiss, absent -> summon
+    // Toggle behavior: present -> dismiss (or restore trainer mode), absent -> summon
     if (IsFollowerActive(player, type))
+    {
+        // If Kirin Tor Familiar is active in morphed trainer mode, restore to default familiar form
+        if (type == FollowerType::Trainer)
+        {
+            if (Creature* follower = GetFollower(player, type))
+            {
+                if (follower->GetEntry() != sUtilityFollowerConfig->TrainerCreatureEntry)
+                {
+                    UtilityFollowerServices::RestoreTrainerFamiliar(follower);
+                    ChatHandler(player).SendSysMessage("Kirin Tor Familiar restored to default form.");
+                    return;
+                }
+            }
+        }
+
         DespawnFollower(player, type);
+    }
     else
         SummonFollower(player, type);
 }
@@ -387,11 +404,19 @@ void UtilityFollowerMgr::SyncSpellsOnLogin(Player* player)
         sUtilityFollowerConfig->BankerSpellAutoLearn &&
         level >= sUtilityFollowerConfig->BankerSpellLearnLevel)
     {
-        uint32 spellId = (player->GetTeam() == ALLIANCE) ?
+        bool isAlliance = (player->GetTeam() == ALLIANCE || player->GetTeamId() == TEAM_ALLIANCE);
+        uint32 correctSpell = isAlliance ?
             sUtilityFollowerConfig->BankerSpellIdAlliance :
             sUtilityFollowerConfig->BankerSpellIdHorde;
+        uint32 oppositeSpell = isAlliance ?
+            sUtilityFollowerConfig->BankerSpellIdHorde :
+            sUtilityFollowerConfig->BankerSpellIdAlliance;
 
-        TeachFollowerSpell(player, spellId);
+        // Clean up wrong-faction spell if character faction shifted or was previously taught opposite spell
+        if (player->HasSpell(oppositeSpell))
+            player->RemoveSpell(oppositeSpell);
+
+        TeachFollowerSpell(player, correctSpell);
     }
 
     // Auctioneer
@@ -440,11 +465,18 @@ void UtilityFollowerMgr::CheckSpellsOnLevelChange(Player* player, uint8 oldLevel
             newLevel >= sUtilityFollowerConfig->BankerSpellLearnLevel &&
             oldLevel < sUtilityFollowerConfig->BankerSpellLearnLevel)
         {
-            uint32 spellId = (player->GetTeam() == ALLIANCE) ?
+            bool isAlliance = (player->GetTeam() == ALLIANCE || player->GetTeamId() == TEAM_ALLIANCE);
+            uint32 correctSpell = isAlliance ?
                 sUtilityFollowerConfig->BankerSpellIdAlliance :
                 sUtilityFollowerConfig->BankerSpellIdHorde;
+            uint32 oppositeSpell = isAlliance ?
+                sUtilityFollowerConfig->BankerSpellIdHorde :
+                sUtilityFollowerConfig->BankerSpellIdAlliance;
 
-            TeachFollowerSpell(player, spellId);
+            if (player->HasSpell(oppositeSpell))
+                player->RemoveSpell(oppositeSpell);
+
+            TeachFollowerSpell(player, correctSpell);
         }
 
         if (sUtilityFollowerConfig->AuctioneerEnable &&

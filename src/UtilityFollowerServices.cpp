@@ -11,6 +11,11 @@
 #include "Objects/Pet.h"
 #include "Chat/Chat.h"
 #include "WorldSession.h"
+#include "ScriptedGossip.h"
+
+#ifndef PlayerTalkClass
+#define PlayerTalkClass (player->PlayerTalkClass)
+#endif
 
 namespace UtilityFollowerServices
 {
@@ -37,35 +42,41 @@ namespace UtilityFollowerServices
         if (!player || !creature)
             return false;
 
-        uint8 pClass = player->GetClass();
-        uint32 proxyEntry = 0;
-        switch (pClass)
+        bool isHorde = (player->GetTeam() == HORDE || player->GetTeamId() == TEAM_HORDE);
+        uint32 trainerEntry = 0;
+
+        switch (player->GetClass())
         {
-            case CLASS_WARRIOR: proxyEntry = ENTRY_PROXY_TRAINER_WARRIOR; break;
-            case CLASS_PALADIN: proxyEntry = ENTRY_PROXY_TRAINER_PALADIN; break;
-            case CLASS_HUNTER:  proxyEntry = ENTRY_PROXY_TRAINER_HUNTER; break;
-            case CLASS_ROGUE:   proxyEntry = ENTRY_PROXY_TRAINER_ROGUE; break;
-            case CLASS_PRIEST:  proxyEntry = ENTRY_PROXY_TRAINER_PRIEST; break;
-            case CLASS_SHAMAN:  proxyEntry = ENTRY_PROXY_TRAINER_SHAMAN; break;
-            case CLASS_MAGE:    proxyEntry = ENTRY_PROXY_TRAINER_MAGE; break;
-            case CLASS_WARLOCK: proxyEntry = ENTRY_PROXY_TRAINER_WARLOCK; break;
-            case CLASS_DRUID:   proxyEntry = ENTRY_PROXY_TRAINER_DRUID; break;
+            case CLASS_WARRIOR: trainerEntry = isHorde ? TRAINER_HORDE_WARRIOR : TRAINER_ALLIANCE_WARRIOR; break;
+            case CLASS_PALADIN: trainerEntry = TRAINER_ALLIANCE_PALADIN; break;
+            case CLASS_HUNTER:  trainerEntry = isHorde ? TRAINER_HORDE_HUNTER  : TRAINER_ALLIANCE_HUNTER;  break;
+            case CLASS_ROGUE:   trainerEntry = isHorde ? TRAINER_HORDE_ROGUE   : TRAINER_ALLIANCE_ROGUE;   break;
+            case CLASS_PRIEST:  trainerEntry = isHorde ? TRAINER_HORDE_PRIEST  : TRAINER_ALLIANCE_PRIEST;  break;
+            case CLASS_SHAMAN:  trainerEntry = TRAINER_HORDE_SHAMAN; break;
+            case CLASS_MAGE:    trainerEntry = isHorde ? TRAINER_HORDE_MAGE    : TRAINER_ALLIANCE_MAGE;    break;
+            case CLASS_WARLOCK: trainerEntry = isHorde ? TRAINER_HORDE_WARLOCK : TRAINER_ALLIANCE_WARLOCK; break;
+            case CLASS_DRUID:   trainerEntry = isHorde ? TRAINER_HORDE_DRUID   : TRAINER_ALLIANCE_DRUID;   break;
             default:
                 ChatHandler(player).SendSysMessage("No class trainer available for your class.");
                 return false;
         }
 
-        Creature* proxy = player->SummonCreature(proxyEntry, player->GetPositionX(), player->GetPositionY(),
-                                                 player->GetPositionZ(), player->GetOrientation(),
-                                                 TEMPSUMMON_TIMED_DESPAWN, 120000);
-        if (!proxy)
-            return false;
+        if (trainerEntry)
+        {
+            creature->UpdateEntry(trainerEntry);
+            creature->SetFactionTemplateId(35);
+            creature->SetDisplayId(sUtilityFollowerConfig->TrainerDisplayId);
+            creature->SetNativeDisplayId(sUtilityFollowerConfig->TrainerDisplayId);
+            creature->SetFloatValue(OBJECT_FIELD_SCALE_X, sUtilityFollowerConfig->TrainerScale);
+            creature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER);
 
-        proxy->SetFactionTemplateId(player->GetFactionTemplateId());
-        proxy->SetMaxHealth(100);
-        proxy->SetHealth(100);
-        player->GetSession()->SendTrainerList(proxy->GetObjectGuid());
-        return true;
+            CreatureInfo const* ci = creature->GetCreatureInfo();
+            char const* name = ci ? ci->name.c_str() : "Class Trainer";
+            ChatHandler(player).PSendSysMessage("Kirin Tor Familiar attuned as %s. Right-click to train, or cast Kirin Tor Familiar to restore.", name);
+            return true;
+        }
+
+        return false;
     }
 
     bool OpenProfessionTrainer(Player* player, Creature* creature, uint32 profAction)
@@ -73,36 +84,83 @@ namespace UtilityFollowerServices
         if (!player || !creature)
             return false;
 
-        uint32 proxyEntry = 0;
+        uint32 profEntry = 0;
         switch (profAction)
         {
-            case ACTION_PROF_ALCHEMY:        proxyEntry = ENTRY_PROXY_TRAINER_ALCHEMY; break;
-            case ACTION_PROF_BLACKSMITHING:  proxyEntry = ENTRY_PROXY_TRAINER_BLACKSMITHING; break;
-            case ACTION_PROF_ENCHANTING:     proxyEntry = ENTRY_PROXY_TRAINER_ENCHANTING; break;
-            case ACTION_PROF_ENGINEERING:    proxyEntry = ENTRY_PROXY_TRAINER_ENGINEERING; break;
-            case ACTION_PROF_HERBALISM:      proxyEntry = ENTRY_PROXY_TRAINER_HERBALISM; break;
-            case ACTION_PROF_LEATHERWORKING: proxyEntry = ENTRY_PROXY_TRAINER_LEATHERWORKING; break;
-            case ACTION_PROF_MINING:         proxyEntry = ENTRY_PROXY_TRAINER_MINING; break;
-            case ACTION_PROF_SKINNING:       proxyEntry = ENTRY_PROXY_TRAINER_SKINNING; break;
-            case ACTION_PROF_TAILORING:      proxyEntry = ENTRY_PROXY_TRAINER_TAILORING; break;
-            case ACTION_PROF_JEWELCRAFTING:  proxyEntry = ENTRY_PROXY_TRAINER_JEWELCRAFTING; break;
-            case ACTION_PROF_COOKING:        proxyEntry = ENTRY_PROXY_TRAINER_COOKING; break;
-            case ACTION_PROF_FIRST_AID:      proxyEntry = ENTRY_PROXY_TRAINER_FIRST_AID; break;
-            case ACTION_PROF_FISHING:        proxyEntry = ENTRY_PROXY_TRAINER_FISHING; break;
+            case ACTION_PROF_ALCHEMY:        profEntry = TRAINER_ALCHEMY; break;
+            case ACTION_PROF_BLACKSMITHING:  profEntry = TRAINER_BLACKSMITHING; break;
+            case ACTION_PROF_ENCHANTING:     profEntry = TRAINER_ENCHANTING; break;
+            case ACTION_PROF_ENGINEERING:    profEntry = TRAINER_ENGINEERING; break;
+            case ACTION_PROF_HERBALISM:      profEntry = TRAINER_HERBALISM; break;
+            case ACTION_PROF_LEATHERWORKING: profEntry = TRAINER_LEATHERWORKING; break;
+            case ACTION_PROF_MINING:         profEntry = TRAINER_MINING; break;
+            case ACTION_PROF_SKINNING:       profEntry = TRAINER_SKINNING; break;
+            case ACTION_PROF_TAILORING:      profEntry = TRAINER_TAILORING; break;
+            case ACTION_PROF_JEWELCRAFTING:  profEntry = TRAINER_JEWELCRAFTING; break;
+            case ACTION_PROF_COOKING:        profEntry = TRAINER_COOKING; break;
+            case ACTION_PROF_FIRST_AID:      profEntry = TRAINER_FIRST_AID; break;
+            case ACTION_PROF_FISHING:        profEntry = TRAINER_FISHING; break;
             default:
                 return false;
         }
 
-        Creature* proxy = player->SummonCreature(proxyEntry, player->GetPositionX(), player->GetPositionY(),
-                                                 player->GetPositionZ(), player->GetOrientation(),
-                                                 TEMPSUMMON_TIMED_DESPAWN, 120000);
-        if (!proxy)
+        if (profEntry)
+        {
+            creature->UpdateEntry(profEntry);
+            creature->SetFactionTemplateId(35);
+            creature->SetDisplayId(sUtilityFollowerConfig->TrainerDisplayId);
+            creature->SetNativeDisplayId(sUtilityFollowerConfig->TrainerDisplayId);
+            creature->SetFloatValue(OBJECT_FIELD_SCALE_X, sUtilityFollowerConfig->TrainerScale);
+            creature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_TRAINER);
+
+            CreatureInfo const* ci = creature->GetCreatureInfo();
+            char const* name = ci ? ci->name.c_str() : "Profession Trainer";
+            ChatHandler(player).PSendSysMessage("Kirin Tor Familiar attuned as %s. Right-click to train, or cast Kirin Tor Familiar to restore.", name);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool RestoreTrainerFamiliar(Creature* creature)
+    {
+        if (!creature)
             return false;
 
-        proxy->SetFactionTemplateId(player->GetFactionTemplateId());
-        proxy->SetMaxHealth(100);
-        proxy->SetHealth(100);
-        player->GetSession()->SendTrainerList(proxy->GetObjectGuid());
+        if (creature->GetEntry() != sUtilityFollowerConfig->TrainerCreatureEntry)
+        {
+            creature->UpdateEntry(sUtilityFollowerConfig->TrainerCreatureEntry);
+            creature->SetFactionTemplateId(35);
+            creature->SetDisplayId(sUtilityFollowerConfig->TrainerDisplayId);
+            creature->SetNativeDisplayId(sUtilityFollowerConfig->TrainerDisplayId);
+            creature->SetFloatValue(OBJECT_FIELD_SCALE_X, sUtilityFollowerConfig->TrainerScale);
+            creature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool ShowTrainerFollowerMenu(Player* player, Creature* creature)
+    {
+        if (!player || !creature)
+            return false;
+
+        RestoreTrainerFamiliar(creature);
+
+        PlayerTalkClass->ClearMenus();
+
+        ADD_GOSSIP_ITEM(GOSSIP_ICON_TRAINER, "Class Training", GOSSIP_SENDER_MAIN, ACTION_TRAINER_CLASS);
+        ADD_GOSSIP_ITEM(GOSSIP_ICON_TRAINER, "Profession Training...", GOSSIP_SENDER_MAIN, ACTION_TRAINER_PROF_MAIN);
+        ADD_GOSSIP_ITEM(GOSSIP_ICON_TALK, "Talent & Pet Services...", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TALENT_SERVICES);
+        ADD_GOSSIP_ITEM(GOSSIP_ICON_TALK, "Specialization Management...", GOSSIP_SENDER_MAIN, ACTION_TRAINER_DUAL_SPEC_MENU);
+
+        if (sUtilityFollowerConfig->TrainerTeleportEnable)
+            ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, "Teleport to Destination...", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TELEPORT_MENU);
+
+        ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dismiss Kirin Tor Familiar", GOSSIP_SENDER_MAIN, ACTION_FOLLOWER_DISMISS);
+
+        SEND_GOSSIP_MENU(1, creature->GetObjectGuid());
         return true;
     }
 

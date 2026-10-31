@@ -159,19 +159,8 @@ public:
             return true;
         }
 
-        PlayerTalkClass->ClearMenus();
-
-        ADD_GOSSIP_ITEM(GOSSIP_ICON_TRAINER, "Class Training", GOSSIP_SENDER_MAIN, ACTION_TRAINER_CLASS);
-        ADD_GOSSIP_ITEM(GOSSIP_ICON_TRAINER, "Profession Training...", GOSSIP_SENDER_MAIN, ACTION_TRAINER_PROF_MAIN);
-        ADD_GOSSIP_ITEM(GOSSIP_ICON_TALK, "Talent & Pet Services...", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TALENT_SERVICES);
-        ADD_GOSSIP_ITEM(GOSSIP_ICON_TALK, "Specialization Management...", GOSSIP_SENDER_MAIN, ACTION_TRAINER_DUAL_SPEC_MENU);
-
-        if (sUtilityFollowerConfig->TrainerTeleportEnable)
-            ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, "Teleport to Destination...", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TELEPORT_MENU);
-
-        ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dismiss Familiar", GOSSIP_SENDER_MAIN, ACTION_FOLLOWER_DISMISS);
-
-        SEND_GOSSIP_MENU(1, creature->GetObjectGuid());
+        UtilityFollowerServices::RestoreTrainerFamiliar(creature);
+        UtilityFollowerServices::ShowTrainerFollowerMenu(player, creature);
         return true;
     }
 
@@ -190,11 +179,15 @@ public:
 
         // Return to main menu
         if (action == ACTION_FOLLOWER_BACK_MAIN)
+        {
+            UtilityFollowerServices::RestoreTrainerFamiliar(creature);
             return OnGossipHello(player, creature);
+        }
 
         // Dismiss follower
         if (action == ACTION_FOLLOWER_DISMISS)
         {
+            UtilityFollowerServices::RestoreTrainerFamiliar(creature);
             CLOSE_GOSSIP_MENU();
             sUtilityFollowerMgr->DespawnFollower(player, FollowerType::Trainer);
             return true;

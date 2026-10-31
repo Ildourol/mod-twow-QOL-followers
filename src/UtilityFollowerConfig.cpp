@@ -53,7 +53,7 @@ void UtilityFollowerConfig::Load()
     AuctioneerScale = sConfig.GetFloatDefault("UtilityFollowers.Auctioneer.Scale", 1.0f);
 
     // Trainer & Teleporter (Kirin Tor Familiar) Appearance (Display 14432 = Mana Fiend in 1.18.1 DBC)
-    TrainerCreatureEntry = static_cast<uint32>(sConfig.GetIntDefault("UtilityFollowers.Trainer.CreatureEntry", 70102));
+    TrainerCreatureEntry = static_cast<uint32>(sConfig.GetIntDefault("UtilityFollowers.Trainer.CreatureEntry", 70104));
     TrainerDisplayId = static_cast<uint32>(sConfig.GetIntDefault("UtilityFollowers.Trainer.DisplayId", 14432));
     TrainerScale = sConfig.GetFloatDefault("UtilityFollowers.Trainer.Scale", 0.5f);
 
@@ -91,7 +91,7 @@ void UtilityFollowerConfig::Load()
     TrainerFreeTalentReset = sConfig.GetBoolDefault("UtilityFollowers.Trainer.FreeTalentReset", false);
     TrainerProfessionMode = sConfig.GetStringDefault("UtilityFollowers.Trainer.ProfessionMode", "Trainer");
 
-    // Medivh Teleportation Services
+    // Kirin Tor Familiar Teleportation Services
     TrainerTeleportEnable = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.Enable", true);
     TrainerTeleportCombatCheck = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.CombatCheck", true);
     TrainerTeleportCost = static_cast<uint32>(sConfig.GetIntDefault("UtilityFollowers.Trainer.Teleport.Cost", 0));

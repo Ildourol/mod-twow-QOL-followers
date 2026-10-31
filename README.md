@@ -13,7 +13,7 @@ The module introduces three distinct utility companions: a faction-tailored Bank
 | Banker (Alliance) | 70100 | 46459 (Forworn Mule) | Pack Mule (Display 14546) | Opens personal bank storage vault anywhere in the world. |
 | Banker (Horde) | 70103 | 46483 (Caravan Kodo) | Pack Kodo (Display 7933) | Opens personal bank storage vault anywhere in the world. |
 | Auctioneer | 70101 | 46460 (Mechanical Auctioneer) | Auctioneer Beardo (Display 7993) | Opens global Auction House browsing, bidding, and listing. |
-| Kirin Tor Familiar | 70102 | 46465 (Kirin Tor Familiar) | Kirin Tor Familiar (Display 14432) | Class training, profession training, talent reset, pet training reset, multi-spec, and teleportation. |
+| Kirin Tor Familiar | 70104 | 46465 (Kirin Tor Familiar) | Kirin Tor Familiar (Display 14432) | Class training, profession training, talent reset, pet training reset, multi-spec, and teleportation. |
 
 ### Kirin Tor Familiar Teleportation Network
 The Kirin Tor Familiar provides fast-travel teleportation to verified open-world entrance coordinates:

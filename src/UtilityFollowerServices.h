@@ -17,6 +17,8 @@ namespace UtilityFollowerServices
     bool OpenAuctioneer(Player* player, Creature* creature);
     bool OpenClassTrainer(Player* player, Creature* creature);
     bool OpenProfessionTrainer(Player* player, Creature* creature, uint32 profAction);
+    bool RestoreTrainerFamiliar(Creature* creature);
+    bool ShowTrainerFollowerMenu(Player* player, Creature* creature);
     bool ResetPlayerTalents(Player* player, Creature* creature);
     bool ResetPetTalents(Player* player, Creature* creature);
     bool ActivateDualSpec(Player* player, uint8 slot);

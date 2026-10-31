@@ -55,7 +55,7 @@ enum FollowerGossipAction : uint32
     // Auctioneer
     ACTION_AUCTIONEER_OPEN              = 20,
 
-    // Trainer / Medivh Menu Navigation
+    // Trainer / Kirin Tor Familiar Menu Navigation
     ACTION_TRAINER_CLASS                = 30,
     ACTION_TRAINER_PROF_MAIN            = 31,
     ACTION_TRAINER_PROF_PRIMARY_MENU    = 32,
@@ -157,41 +157,63 @@ enum FollowerGossipAction : uint32
     ACTION_TELEPORT_NAXXRAMAS           = 457
 };
 
-// Dedicated Follower & Proxy IDs created in 20261030000000_world_qol_followers.sql
+// Dedicated Follower IDs
 enum FollowerDedicatedEntries : uint32
 {
-    ENTRY_BANKER_MULE                   = 70100,
-    ENTRY_BANKER_KODO                   = 70103,
-    ENTRY_AUCTIONEER_BEARDO             = 70101,
-    ENTRY_UTILITY_HELPER                = 70102,
-    ENTRY_KIRIN_TOR_FAMILIAR           = 70102,
-    ENTRY_MEDIVH_GUARDIAN               = 70102, // Backward-compatible alias
+    ENTRY_BANKER_MULE                   = 70100, // Alliance Banker (Pack Mule)
+    ENTRY_BANKER_KODO                   = 70103, // Horde Banker (Pack Kodo)
+    ENTRY_AUCTIONEER_BEARDO             = 70101, // Auctioneer (Auctioneer Beardo)
+    ENTRY_UTILITY_HELPER                = 70104, // Kirin Tor Familiar (Trainer & Teleporter)
+    ENTRY_KIRIN_TOR_FAMILIAR            = 70104, // Primary identifier
+    ENTRY_KIRIN_TOR_FAMILIAR_LEGACY     = 70102  // Legacy entry alias
+};
 
-    // Dedicated Class Trainer Proxies (70110 - 70118)
-    ENTRY_PROXY_TRAINER_WARRIOR         = 70110,
-    ENTRY_PROXY_TRAINER_PALADIN         = 70111,
-    ENTRY_PROXY_TRAINER_HUNTER          = 70112,
-    ENTRY_PROXY_TRAINER_ROGUE           = 70113,
-    ENTRY_PROXY_TRAINER_PRIEST          = 70114,
-    ENTRY_PROXY_TRAINER_SHAMAN          = 70115,
-    ENTRY_PROXY_TRAINER_MAGE            = 70116,
-    ENTRY_PROXY_TRAINER_WARLOCK         = 70117,
-    ENTRY_PROXY_TRAINER_DRUID           = 70118,
+// Verified Canonical Class Trainer Template IDs from tw_world:
+enum AllianceClassTrainerTemplate : uint32
+{
+    TRAINER_ALLIANCE_WARRIOR            = 914,   // Ander Germaine (Stormwind - Warrior Trainer, 104 spells)
+    TRAINER_ALLIANCE_PALADIN            = 5492,  // Katherine the Pure (Stormwind - Paladin Trainer, 159 spells)
+    TRAINER_ALLIANCE_HUNTER             = 5515,  // Einris Brightspear (Stormwind - Hunter Trainer, 126 spells)
+    TRAINER_ALLIANCE_ROGUE              = 918,   // Osborne the Night Man (Stormwind - Rogue Trainer, 114 spells)
+    TRAINER_ALLIANCE_PRIEST             = 11401, // Priestess Alathea (Stormwind - Priest Trainer, 156 spells)
+    TRAINER_ALLIANCE_SHAMAN             = 3032,  // Beram Skychaser (Thunder Bluff - Shaman Trainer, 176 spells - fallback/crossfaction)
+    TRAINER_ALLIANCE_MAGE               = 5497,  // Jennea Cannon (Stormwind - Mage Trainer, 151 spells)
+    TRAINER_ALLIANCE_WARLOCK            = 5495,  // Ursula Deline (Stormwind - Warlock Trainer, 144 spells)
+    TRAINER_ALLIANCE_DRUID              = 4217   // Mathrengyl Bearwalker (Darnassus - Druid Trainer, 190 spells)
+};
 
-    // Dedicated Profession Trainer Proxies (70120 - 70132)
-    ENTRY_PROXY_TRAINER_ALCHEMY         = 70120,
-    ENTRY_PROXY_TRAINER_BLACKSMITHING   = 70121,
-    ENTRY_PROXY_TRAINER_ENCHANTING      = 70122,
-    ENTRY_PROXY_TRAINER_ENGINEERING     = 70123,
-    ENTRY_PROXY_TRAINER_HERBALISM       = 70124,
-    ENTRY_PROXY_TRAINER_LEATHERWORKING  = 70125,
-    ENTRY_PROXY_TRAINER_MINING          = 70126,
-    ENTRY_PROXY_TRAINER_SKINNING        = 70127,
-    ENTRY_PROXY_TRAINER_TAILORING       = 70128,
-    ENTRY_PROXY_TRAINER_JEWELCRAFTING   = 70129,
-    ENTRY_PROXY_TRAINER_COOKING         = 70130,
-    ENTRY_PROXY_TRAINER_FIRST_AID       = 70131,
-    ENTRY_PROXY_TRAINER_FISHING         = 70132
+enum HordeClassTrainerTemplate : uint32
+{
+    TRAINER_HORDE_WARRIOR               = 4593,  // Christoph Walker (Undercity - Warrior Trainer, 104 spells)
+    TRAINER_HORDE_PALADIN               = 5492,  // Katherine the Pure (Stormwind - Paladin Trainer fallback)
+    TRAINER_HORDE_HUNTER                = 3406,  // Xor'juul (Orgrimmar - Hunter Trainer, 126 spells)
+    TRAINER_HORDE_ROGUE                 = 3328,  // Ormok (Orgrimmar - Rogue Trainer, 114 spells)
+    TRAINER_HORDE_PRIEST                = 6014,  // X'yera (Orgrimmar - Priest Trainer, 159 spells)
+    TRAINER_HORDE_SHAMAN                = 3032,  // Beram Skychaser (Thunder Bluff - Shaman Trainer, 176 spells)
+    TRAINER_HORDE_MAGE                  = 5882,  // Pephredo (Orgrimmar - Mage Trainer, 151 spells)
+    TRAINER_HORDE_WARLOCK               = 3324,  // Grol'dar (Orgrimmar - Warlock Trainer, 144 spells)
+    TRAINER_HORDE_DRUID                 = 3033   // Turak Runetotem (Thunder Bluff - Druid Trainer, 190 spells)
+};
+
+// Verified Canonical Profession Trainer Template IDs from tw_world:
+enum ProfessionTrainerTemplate : uint32
+{
+    // Primary Professions
+    TRAINER_ALCHEMY                     = 5032,  // World Alchemy Trainer (37 spells, all ranks)
+    TRAINER_BLACKSMITHING               = 2836,  // Brikk Keencraft (Master Blacksmith, 71 spells)
+    TRAINER_ENCHANTING                  = 5038,  // World Enchanting Trainer (66 spells, all ranks)
+    TRAINER_ENGINEERING                 = 5037,  // World Engineering Trainer (80 spells, all ranks)
+    TRAINER_HERBALISM                   = 812,   // Alma Jainrose (Herbalism Trainer, 4 spells)
+    TRAINER_LEATHERWORKING              = 5040,  // World Leatherworking Trainer (72 spells, all ranks)
+    TRAINER_MINING                      = 5513,  // Gelman Stonehand (Mining Trainer, 13 spells)
+    TRAINER_SKINNING                    = 7088,  // Thuwd (Skinning Trainer, 4 spells)
+    TRAINER_TAILORING                   = 5041,  // World Tailoring Trainer (78 spells, all ranks)
+    TRAINER_JEWELCRAFTING               = 61913, // Fanzy Sparkspring (Master Jewelcrafter, 81 spells via trainer_id 6)
+
+    // Secondary Professions
+    TRAINER_COOKING                     = 1382,  // Mudduk (Superior Cook, 9 spells)
+    TRAINER_FIRST_AID                   = 2329,  // Michelle Belle (Physician / First Aid Trainer, 7 spells)
+    TRAINER_FISHING                     = 5493   // Arnold Leland (Fishing Trainer, 2 spells)
 };
 
 // Teleport Destination Representation
