@@ -74,118 +74,92 @@ Players can also summon and dismiss followers via in-game chat commands:
 
 ## Installation
 
-The module integrates seamlessly as a standalone vMaNGOS module without requiring any patches or core modifications.
+These steps assume you have a working [TortoiseWoW](https://github.com/Penqle/tortoise-wow) source checkout, initialized core databases, and the server data files for your realm. Use a core revision compatible with this module. Run all build and SQL commands from the core source root, the directory containing the core's `CMakeLists.txt`.
 
-### Step 1: Install the Module Source
 
-Place `mod-twow-QOL-followers` inside the `modules` directory of your `tortoise-wow` source repository.
+### 1. Add the module and build on Linux
 
-#### Option A: Clone repository into `modules/` (Standard Setup)
+Use Git, CMake, a C++17 compiler, and the core's build dependencies. On Debian or Ubuntu, a typical starting point is:
+
 ```bash
-cd /path/to/tortoise-wow/modules
-git clone https://github.com/Ildourol/mod-twow-QOL-followers.git mod-twow-QOL-followers
+sudo apt update
+sudo apt install git cmake build-essential libace-dev default-libmysqlclient-dev libssl-dev zlib1g-dev
 ```
 
-#### Option B: Directory Junction / Symlink (Recommended for Modular Development)
-If you maintain modules in an external workspace, create a directory junction or symbolic link into `tortoise-wow/modules/`:
+Use your distribution's `mysql` or `mariadb` command-line client if importing SQL manually. Keep any additional dependency and CMake settings required by your core and other enabled modules.
 
-**Windows (PowerShell / Command Prompt as Administrator):**
-```cmd
-mklink /J "C:\path\to\tortoise-wow\modules\mod-twow-QOL-followers" "C:\Users\Admin\AntigravityProfiles\Projects Twow\Turtle wow modules\mod-twow-QOL-followers"
-```
-
-**Linux / macOS:**
-```bash
-ln -s /path/to/mod-twow-QOL-followers /path/to/tortoise-wow/modules/mod-twow-QOL-followers
-```
-
-Your resulting source directory structure:
-```text
-tortoise-wow/
-├── modules/
-│   └── mod-twow-QOL-followers/
-│       ├── conf/
-│       │   └── mod_qol_followers.conf.dist
-│       ├── data/
-│       │   └── sql/world/
-│       │       └── 20261030000000_world_qol_followers.sql
-│       ├── docs/
-│       │   └── ARCHITECTURE.md
-│       ├── src/
-│       │   ├── mod_QOL_followers_loader.cpp
-│       │   └── ...
-│       ├── CMakeLists.txt
-│       ├── preview.jpg
-│       └── README.md
-```
-
-### Step 2: Apply Database Migration
-
-Import the SQL migration file into your **`world`** database (e.g. `world` or `tw_world`):
-
-**Linux / Bash:**
-```bash
-mysql -u root -p world < modules/mod-twow-QOL-followers/data/sql/world/20261030000000_world_qol_followers.sql
-```
-
-**Windows / PowerShell:**
-```powershell
-Get-Content .\modules\mod-twow-QOL-followers\data\sql\world\20261030000000_world_qol_followers.sql | mysql -u root -p world
-```
-
-> [!NOTE]
-> This migration registers creature templates `70100` (Pack Mule Banker), `70103` (Pack Kodo Banker), `70101` (Auctioneer Beardo), and `70104` (Kirin Tor Familiar Trainer & Teleporter). It is idempotent and safe to apply on top of fresh databases.
-
-### Step 3: Configure CMake and Build `mangosd`
-
-Configure CMake to include the module and build the world server binary:
-
-#### Linux (Ubuntu 22.04 / 24.04 LTS):
 ```bash
 cd /path/to/tortoise-wow
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DMODULE_MOD_TWOW_QOL_FOLLOWERS=static
-cmake --build . --target mangosd -j$(nproc)
+git clone https://github.com/Ildourol/mod-twow-QOL-followers.git modules/mod-twow-QOL-followers
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/server-stage" -DMODULE_MOD_TWOW_QOL_FOLLOWERS=static
+cmake --build build --parallel
+cmake --install build
 ```
 
-#### Windows (Visual Studio 2022 / MSVC):
+### 2. Add the module and build on Windows
+
+Install Git for Windows, CMake 3.21 or later, and Visual Studio 2022 or its Build Tools with **Desktop development with C++** and a Windows SDK. Open PowerShell with Git and CMake on `PATH`. Use an x64 build and the dependency setup of your working core.
+
 ```powershell
-cd C:\path\to\tortoise-wow
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DMODULE_MOD_TWOW_QOL_FOLLOWERS=static
-cmake --build build --config Release --target mangosd --parallel
+Set-Location 'C:\src\tortoise-wow'
+git clone https://github.com/Ildourol/mod-twow-QOL-followers.git modules/mod-twow-QOL-followers
+cmake -S . -B build-vs -G "Visual Studio 17 2022" -A x64 "-DCMAKE_INSTALL_PREFIX=$PWD/server-stage" -DMODULE_MOD_TWOW_QOL_FOLLOWERS=static
+cmake --build build-vs --config Release --parallel
+cmake --install build-vs --config Release
 ```
 
-### Step 4: Deploy Configuration
+Check each command for errors before continuing. Both builds include `mangosd`. If the configure output reports an unused module switch, verify the source placement before building. The two build sections are platform alternatives. If you already have a module checkout, use it in place of the clone. A full directory copy, a Linux symlink, or a Windows directory junction works as long as `modules/mod-twow-QOL-followers/src/` is directly below the module directory. The module directory name determines the CMake switch and loader symbol. If reusing a build directory, keep its generator and architecture and preserve the switches for your other modules. Reconfigure after adding the module and verify CMake lists it as static.
 
-Copy the distributed template `mod_qol_followers.conf.dist` to your server's module configuration directory:
+The staged world server is normally `server-stage/bin/mangosd` on Linux and `server-stage/mangosd.exe` on Windows. Stop the running world server before deploying the rebuilt executable and any required runtime libraries or module assets. Preserve the live configuration and data files. The paths below assume the standard staged layout. For an existing deployment, use the directory containing the active `mangosd.conf`, including a custom path passed via `-c`.
+
+### 3. Set up the database
+
+Back up the affected databases. The examples use `tw_char` and `tw_world` as database names. Substitute the names from the active `CharacterDatabase.Info` and `WorldDatabase.Info` settings as applicable, plus your database user and any connection options.
+
+Choose 1 import method. For the core auto-updater, verify that `Database.AutoUpdate.Enabled` and `Database.AutoUpdate.SortByName` are enabled, that `Database.AutoUpdate.AllowedModules` includes `mod-twow-QOL-followers` (or uses `all`), and that the runtime host can access the module checkout at the source path embedded by the build. The updater uses the configured `CharUpdateName` and `WorldUpdateName` under `data/sql/` (normally `character` and `world`). Check the first startup log for applied updates. If importing manually, exclude this module from the updater allowlist to avoid replaying the same files. Preserve other modules that use automatic updates.
+
+**Manual import on Linux (Bash)**
 
 ```bash
-# Beside other module configs (e.g. bin/etc/modules/ or bin/etc/)
-cp modules/mod-twow-QOL-followers/conf/mod_qol_followers.conf.dist bin/etc/modules/mod_qol_followers.conf
+mysql -u root -p tw_world < "modules/mod-twow-QOL-followers/data/sql/world/20261030000000_world_qol_followers.sql"
 ```
 
-Or alongside `mangosd.conf`:
+**Manual import on Windows (PowerShell)**
+
+Run `Get-Command mysql.exe` first. If it is unavailable, install the MySQL or MariaDB command-line client and add its `bin` directory to the current PowerShell session. Replace the example path below with your installation path. Use `mariadb.exe` in the import commands if that is the client you installed. Run imports in the order shown and stop if any command reports an error. `cmd.exe` handles input redirection so the SQL file reaches the client directly.
+
+```powershell
+# Only needed when mysql.exe is installed but missing from PATH
+# $env:Path = 'C:\Program Files\MySQL\MySQL Server 8.0\bin;' + $env:Path
+cmd.exe /d /c 'mysql.exe -u root -p tw_world < modules\mod-twow-QOL-followers\data\sql\world\20261030000000_world_qol_followers.sql'
+if ($LASTEXITCODE -ne 0) { throw "Module SQL import failed" }
+```
+
+### 4. Deploy and enable the configuration
+
+Create `mod_qol_followers.conf` inside the `modules/` subdirectory beside the active `mangosd.conf`. For a first install using the example staging directory, the following commands copy the shipped template. If an active module config already exists, retain it and merge new settings from the template.
+
+**Linux**
+
 ```bash
-cp modules/mod-twow-QOL-followers/conf/mod_qol_followers.conf.dist bin/mod_qol_followers.conf
+mkdir -p server-stage/etc/modules
+cp -n "modules/mod-twow-QOL-followers/conf/mod_qol_followers.conf.dist" "server-stage/etc/modules/mod_qol_followers.conf"
 ```
 
-### Step 5: Verify Server Startup
+**Windows (PowerShell)**
 
-Launch `mangosd` and verify the module initialization messages in the console log:
-
-```text
-mod-QOL-followers: Loading Utility Followers configuration...
-mod-QOL-followers: Validating creature templates...
-mod-QOL-followers: Startup validation complete.
+```powershell
+New-Item -ItemType Directory -Force 'server-stage/modules' | Out-Null
+if (-not (Test-Path 'server-stage/modules/mod_qol_followers.conf')) {
+    Copy-Item 'modules/mod-twow-QOL-followers/conf/mod_qol_followers.conf.dist' 'server-stage/modules/mod_qol_followers.conf'
+}
 ```
 
-In-game, test the system using:
-- `.utility banker` (or `.utility bank`)
-- `.utility auctioneer` (or `.utility ah`)
-- `.utility helper` (or `.utility familiar`)
-- Or cast the companion summon spells directly from your character's Spellbook!
+Keep the template's section header and confirm `UtilityFollowers.Enable = 1` in the active file. Start the rebuilt server with your normal launcher and active `mangosd.conf`. Check the startup log for module configuration, database, and dependency errors.
 
----
+### Verify the installation
+
+Use `.utility banker`, `.utility auctioneer`, or `.utility helper` on a test character. If a follower fails to spawn, check the world SQL import and the startup log for missing creature templates.
 
 ## Configuration Reference
 
