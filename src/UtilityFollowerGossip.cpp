@@ -348,6 +348,12 @@ public:
             if (sUtilityFollowerConfig->TrainerTeleportEnableRaids)
                 ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, "Classic Raids...", GOSSIP_SENDER_MAIN, ACTION_TELEPORT_CAT_RAIDS);
 
+            if (sUtilityFollowerConfig->TrainerTeleportEnableTurtleDungeons)
+                ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, "Turtle WoW Dungeons...", GOSSIP_SENDER_MAIN, ACTION_TELEPORT_CAT_TURTLE_DUNGEONS);
+
+            if (sUtilityFollowerConfig->TrainerTeleportEnableTurtleRaids)
+                ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, "Turtle WoW Raids...", GOSSIP_SENDER_MAIN, ACTION_TELEPORT_CAT_TURTLE_RAIDS);
+
             ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "[Back to Main Menu]", GOSSIP_SENDER_MAIN, ACTION_FOLLOWER_BACK_MAIN);
             SEND_GOSSIP_MENU(1, creature->GetObjectGuid());
             return true;
@@ -396,6 +402,30 @@ public:
         {
             PlayerTalkClass->ClearMenus();
             auto const& raids = UtilityFollowerDestinations::GetClassicRaids();
+            for (auto const& dest : raids)
+                ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, dest.name, GOSSIP_SENDER_MAIN, dest.action);
+            ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "[Back]", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TELEPORT_MENU);
+            SEND_GOSSIP_MENU(1, creature->GetObjectGuid());
+            return true;
+        }
+
+        // Turtle WoW Dungeons
+        if (action == ACTION_TELEPORT_CAT_TURTLE_DUNGEONS)
+        {
+            PlayerTalkClass->ClearMenus();
+            auto const& dungeons = UtilityFollowerDestinations::GetTurtleDungeons();
+            for (auto const& dest : dungeons)
+                ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, dest.name, GOSSIP_SENDER_MAIN, dest.action);
+            ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "[Back]", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TELEPORT_MENU);
+            SEND_GOSSIP_MENU(1, creature->GetObjectGuid());
+            return true;
+        }
+
+        // Turtle WoW Raids
+        if (action == ACTION_TELEPORT_CAT_TURTLE_RAIDS)
+        {
+            PlayerTalkClass->ClearMenus();
+            auto const& raids = UtilityFollowerDestinations::GetTurtleRaids();
             for (auto const& dest : raids)
                 ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, dest.name, GOSSIP_SENDER_MAIN, dest.action);
             ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "[Back]", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TELEPORT_MENU);

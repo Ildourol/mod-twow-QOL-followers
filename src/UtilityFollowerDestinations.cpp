@@ -62,6 +62,25 @@ namespace UtilityFollowerDestinations
         { ACTION_TELEPORT_NAXXRAMAS, "Naxxramas",                 0,   3144.3f, -4035.7f, 116.8f, 4.5f }
     };
 
+    static const std::vector<FollowerTeleportLocation> g_TurtleDungeons = {
+        { ACTION_TELEPORT_FROSTMANE_HOLLOW,   "Frostmane Hollow (13-20)",   0, -5023.99f, -1443.13f, 499.82f, 2.09f },
+        { ACTION_TELEPORT_DRAGONMAW_RETREAT,  "Dragonmaw Retreat (25-30)",  0, -3813.14f, -3587.64f, -48.15f, 1.37f },
+        { ACTION_TELEPORT_CRESCENT_GROVE,     "The Crescent Grove (32-38)", 1,  1722.00f, -1272.60f, 163.26f, 5.80f },
+        { ACTION_TELEPORT_WINDHORN_CANYON,    "Windhorn Canyon (38-44)",    1, -5126.21f, -3532.49f,   4.54f, 4.54f },
+        { ACTION_TELEPORT_STORMWROUGHT_RUINS, "Stormwrought Ruins (48-54)", 0, -8821.21f,  2900.45f, 135.49f, 5.26f },
+        { ACTION_TELEPORT_HATEFORGE_QUARRY,   "Hateforge Quarry (50-60)",   0, -8169.20f, -3106.70f, 200.40f, 1.10f },
+        { ACTION_TELEPORT_KARAZHAN_CRYPT,     "Karazhan Crypt (58-60)",     0,-11068.90f, -1828.60f,  60.26f, 3.10f },
+        { ACTION_TELEPORT_STORMWIND_VAULT,    "Stormwind Vault (60)",       0, -8679.12f,   639.34f,  95.82f, 2.29f },
+        { ACTION_TELEPORT_GILNEAS_CITY,       "Gilneas City (60)",          0, -1089.86f,  2231.40f, 182.86f, 5.54f },
+        { ACTION_TELEPORT_BLACK_MORASS,       "The Black Morass (60)",      1, -8756.80f, -4191.30f,-209.40f, 5.50f }
+    };
+
+    static const std::vector<FollowerTeleportLocation> g_TurtleRaids = {
+        { ACTION_TELEPORT_LOWER_KARAZHAN,    "Lower Karazhan Halls (10-Man)",  0,-11118.50f, -2010.84f,   47.08f, 3.70f },
+        { ACTION_TELEPORT_EMERALD_SANCTUM,   "Emerald Sanctum (40-Man)",       1,  4819.06f, -1746.33f, 1156.99f, 2.50f },
+        { ACTION_TELEPORT_TOWER_OF_KARAZHAN, "Tower of Karazhan (40-Man)",     0,-11039.60f, -1997.65f,   94.08f, 2.23f }
+    };
+
     FollowerTeleportLocation const* GetDestination(uint32 action)
     {
         for (auto const& loc : g_AllianceCapitals)
@@ -88,6 +107,14 @@ namespace UtilityFollowerDestinations
             if (loc.action == action)
                 return &loc;
 
+        for (auto const& loc : g_TurtleDungeons)
+            if (loc.action == action)
+                return &loc;
+
+        for (auto const& loc : g_TurtleRaids)
+            if (loc.action == action)
+                return &loc;
+
         return nullptr;
     }
 
@@ -97,4 +124,6 @@ namespace UtilityFollowerDestinations
     std::vector<FollowerTeleportLocation> const& GetClassicDungeonsPage1() { return g_ClassicDungeonsP1; }
     std::vector<FollowerTeleportLocation> const& GetClassicDungeonsPage2() { return g_ClassicDungeonsP2; }
     std::vector<FollowerTeleportLocation> const& GetClassicRaids() { return g_ClassicRaids; }
+    std::vector<FollowerTeleportLocation> const& GetTurtleDungeons() { return g_TurtleDungeons; }
+    std::vector<FollowerTeleportLocation> const& GetTurtleRaids() { return g_TurtleRaids; }
 }

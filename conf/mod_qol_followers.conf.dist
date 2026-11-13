@@ -378,3 +378,21 @@ UtilityFollowers.Trainer.Teleport.EnableDungeons = 1
 #
 
 UtilityFollowers.Trainer.Teleport.EnableRaids = 1
+
+#
+#    UtilityFollowers.Trainer.Teleport.EnableTurtleDungeons
+#        Description: Enable submenus for Turtle WoW custom dungeons (Frostmane Hollow, Crescent Grove, etc.).
+#        Default:     1 - Enabled
+#                     0 - Disabled
+#
+
+UtilityFollowers.Trainer.Teleport.EnableTurtleDungeons = 1
+
+#
+#    UtilityFollowers.Trainer.Teleport.EnableTurtleRaids
+#        Description: Enable submenus for Turtle WoW custom raids (Emerald Sanctum, Lower Karazhan, Tower of Karazhan).
+#        Default:     1 - Enabled
+#                     0 - Disabled
+#
+
+UtilityFollowers.Trainer.Teleport.EnableTurtleRaids = 1

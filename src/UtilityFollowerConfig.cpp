@@ -99,6 +99,8 @@ void UtilityFollowerConfig::Load()
     TrainerTeleportEnableExtraLocations = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableExtraLocations", true);
     TrainerTeleportEnableDungeons = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableDungeons", true);
     TrainerTeleportEnableRaids = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableRaids", true);
+    TrainerTeleportEnableTurtleDungeons = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableTurtleDungeons", true);
+    TrainerTeleportEnableTurtleRaids = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableTurtleRaids", true);
 
     // =========================================================================
     // Validation and Safe Fallbacks

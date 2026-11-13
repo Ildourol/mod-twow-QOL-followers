@@ -104,6 +104,8 @@ public:
     bool TrainerTeleportEnableExtraLocations{true};
     bool TrainerTeleportEnableDungeons{true};
     bool TrainerTeleportEnableRaids{true};
+    bool TrainerTeleportEnableTurtleDungeons{true};
+    bool TrainerTeleportEnableTurtleRaids{true};
 
 private:
     UtilityFollowerConfig() = default;

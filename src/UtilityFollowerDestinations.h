@@ -19,6 +19,8 @@ namespace UtilityFollowerDestinations
     std::vector<FollowerTeleportLocation> const& GetClassicDungeonsPage1();
     std::vector<FollowerTeleportLocation> const& GetClassicDungeonsPage2();
     std::vector<FollowerTeleportLocation> const& GetClassicRaids();
+    std::vector<FollowerTeleportLocation> const& GetTurtleDungeons();
+    std::vector<FollowerTeleportLocation> const& GetTurtleRaids();
 }
 
 #endif // UTILITY_FOLLOWER_DESTINATIONS_H
