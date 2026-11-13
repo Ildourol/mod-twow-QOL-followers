@@ -25,11 +25,13 @@ The module introduces three distinct utility companions: a faction-tailored Bank
 
 ### Kirin Tor Familiar Teleportation Network
 The Kirin Tor Familiar provides fast-travel teleportation to verified open-world entrance coordinates:
-- **Alliance Capitals**: Stormwind City, Ironforge, Darnassus.
-- **Horde Capitals**: Orgrimmar, Undercity, Thunder Bluff.
+- **Alliance Capitals**: Stormwind City, Ironforge, Darnassus, Alah'Thalas (High Elf Capital).
+- **Horde Capitals**: Orgrimmar, Undercity, Thunder Bluff, Sparkwater Port (Goblin Port).
+- **Turtle WoW Zones & Islands**: Tel'Abim (Tel Co. Basecamp), Lapidis Isle (Caelan's Rest), Gillijim's Isle (Maul'Ogg Refuge), Mount Hyjal (Nordanaar), Balor Island (Stormbreaker Point), Gilneas (Ravenshire).
 - **Neutral Hubs**: Booty Bay, Gadgetzan, Ratchet, Everlook.
 - **Classic Dungeons**: Ragefire Chasm, The Deadmines, Wailing Caverns, Shadowfang Keep, Blackfathom Deeps, The Stockade, Gnomeregan, Razorfen Kraul, Scarlet Monastery, Razorfen Downs, Uldaman, Zul'Farrak, Maraudon, Sunken Temple, Blackrock Depths, Lower Blackrock Spire, Dire Maul, Scholomance, Stratholme.
 - **Classic Raids**: Molten Core, Onyxia's Lair, Blackwing Lair, Zul'Gurub, Ruins of Ahn'Qiraj, Temple of Ahn'Qiraj, Naxxramas.
+- **Turtle WoW Dungeons & Raids**: Frostmane Hollow, Dragonmaw Retreat, The Crescent Grove, Windhorn Canyon, Stormwrought Ruins, Hateforge Quarry, Karazhan Crypt, Stormwind Vault, Gilneas City, The Black Morass, Winter Veil Vale (Holiday), Gnomeregan Reclamation, Lower Karazhan Halls (10-man), Emerald Sanctum (40-man), Tower of Karazhan (40-man).
 
 ---
 

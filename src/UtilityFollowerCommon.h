@@ -101,11 +101,13 @@ enum FollowerGossipAction : uint32
     ACTION_TELEPORT_STORMWIND           = 311,
     ACTION_TELEPORT_IRONFORGE           = 312,
     ACTION_TELEPORT_DARNASSUS           = 313,
+    ACTION_TELEPORT_ALAHTHALAS          = 314,
 
     // Horde Capitals
     ACTION_TELEPORT_ORGRIMMAR           = 321,
     ACTION_TELEPORT_UNDERCITY           = 322,
     ACTION_TELEPORT_THUNDER_BLUFF       = 323,
+    ACTION_TELEPORT_SPARKWATER          = 324,
 
     // Category Menus under "Other Destinations"
     ACTION_TELEPORT_CAT_DUNGEONS        = 340,
@@ -113,6 +115,7 @@ enum FollowerGossipAction : uint32
     ACTION_TELEPORT_CAT_HUBS            = 342,
     ACTION_TELEPORT_CAT_TURTLE_DUNGEONS = 343,
     ACTION_TELEPORT_CAT_TURTLE_RAIDS    = 344,
+    ACTION_TELEPORT_CAT_TURTLE_ZONES    = 345,
 
     // Dungeon Menus & Pages
     ACTION_TELEPORT_DUNGEONS_CLASSIC_P1 = 350,
@@ -169,11 +172,21 @@ enum FollowerGossipAction : uint32
     ACTION_TELEPORT_STORMWIND_VAULT     = 477,
     ACTION_TELEPORT_GILNEAS_CITY        = 478,
     ACTION_TELEPORT_BLACK_MORASS        = 479,
+    ACTION_TELEPORT_WINTER_VEIL_VALE    = 480,
+    ACTION_TELEPORT_GNOMEREGAN_REC      = 481,
 
     // Turtle WoW Custom Raids (490 - 499)
     ACTION_TELEPORT_LOWER_KARAZHAN      = 490,
     ACTION_TELEPORT_EMERALD_SANCTUM     = 491,
-    ACTION_TELEPORT_TOWER_OF_KARAZHAN   = 492
+    ACTION_TELEPORT_TOWER_OF_KARAZHAN   = 492,
+
+    // Turtle WoW Custom Zones & Islands (500 - 520)
+    ACTION_TELEPORT_TELABIM             = 501,
+    ACTION_TELEPORT_LAPIDIS             = 502,
+    ACTION_TELEPORT_GILLIJIM            = 503,
+    ACTION_TELEPORT_HYJAL               = 504,
+    ACTION_TELEPORT_BALOR               = 505,
+    ACTION_TELEPORT_GILNEAS_WORLD       = 506
 };
 
 // Dedicated Follower IDs

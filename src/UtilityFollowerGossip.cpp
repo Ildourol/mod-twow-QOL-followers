@@ -354,6 +354,9 @@ public:
             if (sUtilityFollowerConfig->TrainerTeleportEnableTurtleRaids)
                 ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, "Turtle WoW Raids...", GOSSIP_SENDER_MAIN, ACTION_TELEPORT_CAT_TURTLE_RAIDS);
 
+            if (sUtilityFollowerConfig->TrainerTeleportEnableTurtleZones)
+                ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, "Turtle WoW Zones & Islands...", GOSSIP_SENDER_MAIN, ACTION_TELEPORT_CAT_TURTLE_ZONES);
+
             ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "[Back to Main Menu]", GOSSIP_SENDER_MAIN, ACTION_FOLLOWER_BACK_MAIN);
             SEND_GOSSIP_MENU(1, creature->GetObjectGuid());
             return true;
@@ -427,6 +430,18 @@ public:
             PlayerTalkClass->ClearMenus();
             auto const& raids = UtilityFollowerDestinations::GetTurtleRaids();
             for (auto const& dest : raids)
+                ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, dest.name, GOSSIP_SENDER_MAIN, dest.action);
+            ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "[Back]", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TELEPORT_MENU);
+            SEND_GOSSIP_MENU(1, creature->GetObjectGuid());
+            return true;
+        }
+
+        // Turtle WoW Zones & Islands
+        if (action == ACTION_TELEPORT_CAT_TURTLE_ZONES)
+        {
+            PlayerTalkClass->ClearMenus();
+            auto const& zones = UtilityFollowerDestinations::GetTurtleZones();
+            for (auto const& dest : zones)
                 ADD_GOSSIP_ITEM(GOSSIP_ICON_TAXI, dest.name, GOSSIP_SENDER_MAIN, dest.action);
             ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "[Back]", GOSSIP_SENDER_MAIN, ACTION_TRAINER_TELEPORT_MENU);
             SEND_GOSSIP_MENU(1, creature->GetObjectGuid());

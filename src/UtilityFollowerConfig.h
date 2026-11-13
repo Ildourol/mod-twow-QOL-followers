@@ -106,6 +106,7 @@ public:
     bool TrainerTeleportEnableRaids{true};
     bool TrainerTeleportEnableTurtleDungeons{true};
     bool TrainerTeleportEnableTurtleRaids{true};
+    bool TrainerTeleportEnableTurtleZones{true};
 
 private:
     UtilityFollowerConfig() = default;

@@ -101,6 +101,7 @@ void UtilityFollowerConfig::Load()
     TrainerTeleportEnableRaids = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableRaids", true);
     TrainerTeleportEnableTurtleDungeons = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableTurtleDungeons", true);
     TrainerTeleportEnableTurtleRaids = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableTurtleRaids", true);
+    TrainerTeleportEnableTurtleZones = sConfig.GetBoolDefault("UtilityFollowers.Trainer.Teleport.EnableTurtleZones", true);
 
     // =========================================================================
     // Validation and Safe Fallbacks

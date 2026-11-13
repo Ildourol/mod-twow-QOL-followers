@@ -396,3 +396,13 @@ UtilityFollowers.Trainer.Teleport.EnableTurtleDungeons = 1
 #
 
 UtilityFollowers.Trainer.Teleport.EnableTurtleRaids = 1
+
+#
+#    UtilityFollowers.Trainer.Teleport.EnableTurtleZones
+#        Description: Enable submenu for Turtle WoW custom zones & islands (Tel'Abim, Lapidis, Gillijim's, Hyjal, Balor, Gilneas).
+#        Default:     1 - Enabled
+#                     0 - Disabled
+#
+
+UtilityFollowers.Trainer.Teleport.EnableTurtleZones = 1
+
