@@ -107,7 +107,6 @@ enum FollowerGossipAction : uint32
     ACTION_TELEPORT_ORGRIMMAR           = 321,
     ACTION_TELEPORT_UNDERCITY           = 322,
     ACTION_TELEPORT_THUNDER_BLUFF       = 323,
-    ACTION_TELEPORT_SPARKWATER          = 324,
 
     // Category Menus under "Other Destinations"
     ACTION_TELEPORT_CAT_DUNGEONS        = 340,

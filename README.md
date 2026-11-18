@@ -26,7 +26,7 @@ The module introduces three distinct utility companions: a faction-tailored Bank
 ### Kirin Tor Familiar Teleportation Network
 The Kirin Tor Familiar provides fast-travel teleportation to verified open-world entrance coordinates:
 - **Alliance Capitals**: Stormwind City, Ironforge, Darnassus, Alah'Thalas (High Elf Capital).
-- **Horde Capitals**: Orgrimmar, Undercity, Thunder Bluff, Sparkwater Port (Goblin Port).
+- **Horde Capitals**: Orgrimmar, Undercity, Thunder Bluff.
 - **Turtle WoW Zones & Islands**: Tel'Abim (Tel Co. Basecamp), Lapidis Isle (Caelan's Rest), Gillijim's Isle (Maul'Ogg Refuge), Mount Hyjal (Nordanaar), Balor Island (Stormbreaker Point), Gilneas (Ravenshire).
 - **Neutral Hubs**: Booty Bay, Gadgetzan, Ratchet, Everlook.
 - **Classic Dungeons**: Ragefire Chasm, The Deadmines, Wailing Caverns, Shadowfang Keep, Blackfathom Deeps, The Stockade, Gnomeregan, Razorfen Kraul, Scarlet Monastery, Razorfen Downs, Uldaman, Zul'Farrak, Maraudon, Sunken Temple, Blackrock Depths, Lower Blackrock Spire, Dire Maul, Scholomance, Stratholme.

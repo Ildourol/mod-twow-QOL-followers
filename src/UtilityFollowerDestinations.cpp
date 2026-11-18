@@ -18,8 +18,7 @@ namespace UtilityFollowerDestinations
     static const std::vector<FollowerTeleportLocation> g_HordeCapitals = {
         { ACTION_TELEPORT_ORGRIMMAR,     "Orgrimmar",                   1,  1633.33f, -4439.11f,   15.69f, 0.10f },
         { ACTION_TELEPORT_UNDERCITY,     "Undercity",                   0,  1586.48f,   239.56f,  -52.15f, 0.00f },
-        { ACTION_TELEPORT_THUNDER_BLUFF, "Thunder Bluff",               1, -1277.37f,   117.15f,  131.05f, 5.20f },
-        { ACTION_TELEPORT_SPARKWATER,    "Sparkwater Port (Goblin)",    1, -1190.00f, -3740.00f,   12.50f, 0.00f }
+        { ACTION_TELEPORT_THUNDER_BLUFF, "Thunder Bluff",               1, -1277.37f,   117.15f,  131.05f, 5.20f }
     };
 
     static const std::vector<FollowerTeleportLocation> g_NeutralHubs = {
